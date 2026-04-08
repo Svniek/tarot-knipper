@@ -204,20 +204,22 @@ header p  { font-size: 0.72rem; color: #666; margin-top: 2px; }
 </div>
 
 <script>
-// ── Coördinaten ───────────────────────────────────────
+// ── Coördinaten (gebaseerd op 3180px breedte) ────────
 const FORMATS = {
   "Tarot_Legging_Kaarten": {
+    ref_breedte: 3180,  // referentie breedte waarop coördinaten zijn gebaseerd
     hoogte_max: 2500,
     kaarten: [
-      { naam: "VERLEDEN", rect: [200, 200,  980, 1730] },
+      { naam: "VERLEDEN", rect: [ 200, 200,  980, 1730] },
       { naam: "HEDEN",    rect: [1250, 200, 2030, 1730] },
       { naam: "TOEKOMST", rect: [2250, 200, 3030, 1730] },
     ]
   },
   "Tarot_Legging_Uitleg": {
+    ref_breedte: 3180,
     hoogte_max: 9999,
     kaarten: [
-      { naam: "VERLEDEN", rect: [200, 200,  980, 1730] },
+      { naam: "VERLEDEN", rect: [ 200, 200,  980, 1730] },
       { naam: "HEDEN",    rect: [1250, 200, 2030, 1730] },
       { naam: "TOEKOMST", rect: [2250, 200, 3030, 1730] },
     ]
@@ -285,9 +287,16 @@ async function verwerkAfbeelding(file) {
   const fmt = FORMATS[formatKey];
   setProgress(0);
 
+  // Schaalfactor: pas coördinaten aan voor werkelijke beeldgrootte
+  const schaal = img.width / fmt.ref_breedte;
+
   for (let i = 0; i < fmt.kaarten.length; i++) {
     const k = fmt.kaarten[i];
-    const [x0, y0, x1, y1] = k.rect;
+    // Schaal coördinaten mee met de werkelijke afbeeldingsbreedte
+    const x0 = Math.round(k.rect[0] * schaal);
+    const y0 = Math.round(k.rect[1] * schaal);
+    const x1 = Math.round(k.rect[2] * schaal);
+    const y1 = Math.round(k.rect[3] * schaal);
     const cw = x1 - x0, ch = y1 - y0;
 
     // Uitsnijden
