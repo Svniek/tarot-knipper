@@ -18,12 +18,11 @@ from pathlib import Path
 UITVOER_BREEDTE = 2160
 UITVOER_HOOGTE  = 3840
 JPEG_KWALITEIT  = 100
-UITVOER_FORMAAT = "png"   # "png" of "jpeg"
+UITVOER_FORMAAT = "png"
 DOEL_DPI        = 300
 PDF_BASIS_DPI   = 72
 # ─────────────────────────────────────────────────────
 
-# ── JPEG Format definities ────────────────────────────
 FORMATS = {
     "Tarot_Legging_Kaarten": {
         "breedte": 3180, "hoogte": 2252,
@@ -102,14 +101,11 @@ def toon_preview_pdf(pagina, marges, pdf_pad):
     h = pagina.rect.height
     cel_b = (b - ml - mr - 2 * gx) / 3
     cel_h = (h - mt - mb - 2 * gy) / 3
-
     zoom = 2
     pix  = pagina.get_pixmap(matrix=fitz.Matrix(zoom, zoom), alpha=False)
-
     tmp_doc = fitz.open()
     tmp_pag = tmp_doc.new_page(width=pix.width, height=pix.height)
     tmp_pag.insert_image(tmp_pag.rect, pixmap=pix)
-
     shape = tmp_pag.new_shape()
     for rij in range(3):
         for kolom in range(3):
@@ -118,7 +114,6 @@ def toon_preview_pdf(pagina, marges, pdf_pad):
             shape.draw_rect(fitz.Rect(x0, y0, x0 + cel_b * zoom, y0 + cel_h * zoom))
     shape.finish(color=(1, 0, 0), width=3, fill=None)
     shape.commit()
-
     preview_pad = pdf_pad.parent / "preview_snijraster.jpg"
     tmp_doc[0].get_pixmap(matrix=fitz.Matrix(1, 1), alpha=False).save(str(preview_pad))
     tmp_doc.close()
@@ -142,7 +137,6 @@ def vraag_marges(pagina, pdf_pad, marges):
         print("\nOpties:")
         print("  [Enter]        → Goed! Doorgaan")
         print("  l=20 r=10 ...  → Waarden aanpassen (l r b o x y)")
-
         invoer = input("\nInvoer: ").strip().lower()
         if invoer == "":
             sla_config_op(ml, mr, mt, mb, gx, gy)
@@ -164,17 +158,19 @@ def vraag_marges(pagina, pdf_pad, marges):
     return ml, mr, mt, mb, gx, gy
 
 
-# ── JPEG Preview + kalibratie ─────────────────────────
-
 # ── AI Naamherkenning ─────────────────────────────────
 
-def bouw_api_request(b64, media_type, aantal_kaarten):
-    if aantal_kaarten == 9:
-        tekst = "Dit is een pagina met 9 tarotkaarten in een 3x3 grid. Elke kaart heeft onderaan een naam. Geef ALLEEN de 9 namen terug, van links naar rechts en van boven naar beneden. Één naam per regel, geen nummers, geen extra tekst, geen lege regels."
-    else:
-        tekst = "Dit is een tarotlegging met 3 kaarten naast elkaar. Elke kaart heeft een naam onderaan. Geef ALLEEN de 3 namen terug van links naar rechts. Één naam per regel, geen nummers, geen extra tekst."
-
-    return json.dumps({
+def stuur_api_request(b64, media_type, aantal, api_key):
+    tekst = (
+        "Dit is een pagina met 9 tarotkaarten in een 3x3 grid. Elke kaart heeft onderaan een naam. "
+        "Geef ALLEEN de 9 namen terug, van links naar rechts en van boven naar beneden. "
+        "Één naam per regel, geen nummers, geen extra tekst, geen lege regels."
+        if aantal == 9 else
+        "Dit is een tarotlegging met 3 kaarten naast elkaar. Elke kaart heeft een naam onderaan. "
+        "Geef ALLEEN de 3 namen terug van links naar rechts. "
+        "Één naam per regel, geen nummers, geen extra tekst."
+    )
+    payload = json.dumps({
         "model": "claude-opus-4-5",
         "max_tokens": 200,
         "messages": [{
@@ -185,9 +181,6 @@ def bouw_api_request(b64, media_type, aantal_kaarten):
             ]
         }]
     }).encode()
-
-
-def stuur_api_request(payload, api_key, aantal):
     req = urllib.request.Request(
         "https://api.anthropic.com/v1/messages",
         data=payload,
@@ -216,7 +209,7 @@ def detecteer_namen_pdf(pagina, api_key):
     zoom = min(1200 / pagina.rect.width, 1.5)
     pix  = pagina.get_pixmap(matrix=fitz.Matrix(zoom, zoom), alpha=False)
     b64  = base64.b64encode(pix.tobytes("jpeg")).decode()
-    return stuur_api_request(bouw_api_request(b64, "image/jpeg", 9), api_key, 9)
+    return stuur_api_request(b64, "image/jpeg", 9, api_key)
 
 
 def detecteer_namen_jpeg(img_pad, api_key):
@@ -224,7 +217,7 @@ def detecteer_namen_jpeg(img_pad, api_key):
     with open(img_pad, "rb") as f:
         b64 = base64.b64encode(f.read()).decode()
     media_type = "image/jpeg" if img_pad.suffix.lower() in (".jpg", ".jpeg") else "image/png"
-    return stuur_api_request(bouw_api_request(b64, media_type, 3), api_key, 3)
+    return stuur_api_request(b64, media_type, 3, api_key)
 
 
 # ── PDF verwerken ─────────────────────────────────────
@@ -233,7 +226,6 @@ def verwerk_pdf(pdf_pad, uitvoer_map, marges, api_key=None):
     doc = fitz.open(pdf_pad)
     ml, mr, mt, mb, gx, gy = marges
     uitvoer_map.mkdir(parents=True, exist_ok=True)
-
     try:
         from PIL import Image
         gebruik_pil = True
@@ -247,10 +239,7 @@ def verwerk_pdf(pdf_pad, uitvoer_map, marges, api_key=None):
         h = pagina.rect.height
         cel_b = (b - ml - mr - 2 * gx) / 3
         cel_h = (h - mt - mb - 2 * gy) / 3
-        zoom_dpi = DOEL_DPI / PDF_BASIS_DPI
-        zoom_res = max(UITVOER_BREEDTE / cel_b, UITVOER_HOOGTE / cel_h)
-        zoom     = max(zoom_dpi, zoom_res)
-
+        zoom  = max(DOEL_DPI / PDF_BASIS_DPI, UITVOER_BREEDTE / cel_b, UITVOER_HOOGTE / cel_h)
         print(f"\nPagina {pagina_nr+1}/{len(doc)} — zoom {zoom:.2f}× ({zoom * PDF_BASIS_DPI:.0f} DPI)")
 
         namen = None
@@ -258,8 +247,6 @@ def verwerk_pdf(pdf_pad, uitvoer_map, marges, api_key=None):
             namen = detecteer_namen_pdf(pagina, api_key)
             if namen:
                 print(f"  Namen: {', '.join(n for n in namen if n)}")
-            else:
-                print("  Naamherkenning mislukt, fallback naar bestandsnummer")
 
         for rij in range(3):
             for kolom in range(3):
@@ -304,21 +291,23 @@ def verwerk_jpeg_legging(img_pad, uitvoer_map, format_key, api_key=None):
 
     img = Image.open(img_pad).convert("RGB")
     W, H = img.size
-    print(f"\nAfbeelding: {img_pad.name} — {W}×{H} px — format: {format_key}")
+    schaal = W / FORMATS[format_key]["breedte"]
+    print(f"\nAfbeelding: {img_pad.name} — {W}×{H} px — schaal: {schaal:.3f}×")
     uitvoer_map.mkdir(parents=True, exist_ok=True)
 
-    rects = FORMATS[format_key]["kaarten"]
-
-    # Naamherkenning
-    kaart_namen = [r["naam"] for r in rects]
+    kaart_namen = [r["naam"] for r in FORMATS[format_key]["kaarten"]]
     if api_key:
         herkend = detecteer_namen_jpeg(img_pad, api_key)
         if herkend:
             print(f"  Namen: {', '.join(herkend)}")
             kaart_namen = herkend
 
-    for i, kaart in enumerate(rects):
-        x0, y0, x1, y1 = kaart["rect"]
+    for i, kaart in enumerate(FORMATS[format_key]["kaarten"]):
+        x0 = round(kaart["rect"][0] * schaal)
+        y0 = round(kaart["rect"][1] * schaal)
+        x1 = round(kaart["rect"][2] * schaal)
+        y1 = round(kaart["rect"][3] * schaal)
+
         gesneden  = img.crop((x0, y0, x1, y1))
         geschaald = gesneden.resize((UITVOER_BREEDTE, UITVOER_HOOGTE), Image.LANCZOS)
 
@@ -343,15 +332,16 @@ def main():
     huidige_map = Path.cwd()
 
     pdfs  = sorted(huidige_map.glob("*.pdf"))
-    jpegs = sorted([
-        f for f in list(huidige_map.glob("*.jpg")) + list(huidige_map.glob("*.jpeg"))
-        if any(k in f.name for k in FORMATS.keys())
-    ])
+    jpegs = sorted(
+        list(huidige_map.glob("*.jpg")) +
+        list(huidige_map.glob("*.jpeg")) +
+        list(huidige_map.glob("*.JPG")) +
+        list(huidige_map.glob("*.JPEG"))
+    )
     bestanden = pdfs + jpegs
 
     if not bestanden:
         print(f"Geen bestanden gevonden in: {huidige_map}")
-        print("Ondersteund: *.pdf, *Tarot_Legging_Kaarten*.jpg, *Tarot_Legging_Uitleg*.jpg")
         sys.exit(1)
 
     if len(bestanden) == 1:
@@ -359,7 +349,7 @@ def main():
     else:
         print("Bestanden gevonden:")
         for i, f in enumerate(bestanden):
-            soort = "PDF" if f.suffix == ".pdf" else "JPEG"
+            soort = "PDF" if f.suffix.lower() == ".pdf" else "JPEG"
             print(f"  {i+1}. [{soort}] {f.name}")
         bestand = bestanden[int(input("Welk nummer? ").strip()) - 1]
 
@@ -386,10 +376,14 @@ def main():
         doc.close()
         verwerk_pdf(bestand, uitvoer_map, marges, api_key)
     else:
+        # Detecteer format op naam, anders vragen
         format_key = next((k for k in FORMATS if k in bestand.name), None)
         if not format_key:
-            print(f"❌ Onbekend formaat: {bestand.name}")
-            sys.exit(1)
+            print(f"\nWelk format is '{bestand.name}'?")
+            for i, k in enumerate(FORMATS.keys()):
+                print(f"  {i+1}. {k}")
+            keuze = int(input("Keuze: ").strip()) - 1
+            format_key = list(FORMATS.keys())[keuze]
         verwerk_jpeg_legging(bestand, uitvoer_map, format_key, api_key)
 
     input("\nDruk op Enter om af te sluiten...")
