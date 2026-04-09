@@ -2,167 +2,49 @@
 <html lang="nl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
 <title>Tarot Knipper</title>
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-:root {
-  --goud: #c9a84c;
-  --donker: #1a1a2e;
-  --panel: #16213e;
-  --rand: #0f3460;
-  --tekst: #eee;
-}
-body {
-  font-family: -apple-system, sans-serif;
-  background: var(--donker);
-  color: var(--tekst);
-  min-height: 100vh;
-  padding: 0 0 40px 0;
-}
-header {
-  background: var(--panel);
-  border-bottom: 1px solid var(--rand);
-  padding: 16px 20px 12px;
-  text-align: center;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-header h1 { font-size: 1.2rem; color: var(--goud); }
-header p  { font-size: 0.72rem; color: #666; margin-top: 2px; }
-
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, sans-serif; background: #1a1a2e; color: #eee; padding-bottom: 40px; }
+header { background: #16213e; border-bottom: 1px solid #0f3460; padding: 16px 20px; text-align: center; }
+header h1 { font-size: 1.2rem; color: #c9a84c; }
+header p  { font-size: 0.72rem; color: #555; margin-top: 2px; }
 .sectie { padding: 16px; }
 
-/* Upload knop */
-.upload-zone { border: 2px dashed #c9a84c44;
+label.upload {
+  display: block;
+  border: 2px dashed #c9a84c55;
   border-radius: 14px;
   padding: 36px 20px;
   text-align: center;
+  background: #16213e;
   cursor: pointer;
-  transition: all 0.2s;
-  background: var(--panel);
 }
-.upload-zone.actief { border-color: var(--goud); background: #c9a84c11; }
-.upload-zone input { display: none; }
-.upload-icoon { font-size: 3rem; margin-bottom: 10px; }
-.upload-tekst { color: #aaa; font-size: 0.9rem; line-height: 1.5; }
-.upload-tekst strong { color: var(--goud); }
+label.upload .icoon { font-size: 3rem; display: block; margin-bottom: 10px; }
+label.upload .tekst { color: #aaa; font-size: 0.9rem; line-height: 1.6; }
+label.upload .tekst strong { color: #c9a84c; display: block; margin-top: 6px; }
+#foto-input { display: none; }
 
-/* API key */
-.api-veld {
-  background: var(--panel);
-  border-radius: 14px;
-  padding: 14px 16px;
-  margin-top: 14px;
-  border: 1px solid var(--rand);
-}
-.api-veld label { font-size: 0.75rem; color: #777; display: block; margin-bottom: 6px; }
-.api-veld input {
-  width: 100%;
-  background: var(--rand);
-  border: 1px solid #1a4a8a;
-  color: var(--tekst);
-  border-radius: 8px;
-  padding: 10px 12px;
-  font-size: 0.78rem;
-  font-family: monospace;
-}
+.veld { background: #16213e; border-radius: 14px; padding: 14px 16px; margin-top: 14px; border: 1px solid #0f3460; }
+.veld label { font-size: 0.75rem; color: #777; display: block; margin-bottom: 6px; }
+.veld input { width: 100%; background: #0f3460; border: 1px solid #1a4a8a; color: #eee; border-radius: 8px; padding: 10px 12px; font-size: 0.78rem; font-family: monospace; }
 
-/* Status */
-#status-balk {
-  background: var(--panel);
-  border-radius: 10px;
-  padding: 12px 16px;
-  margin-top: 14px;
-  font-size: 0.82rem;
-  color: #888;
-  text-align: center;
-  border: 1px solid var(--rand);
-  min-height: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
+#status { background: #16213e; border-radius: 10px; padding: 12px 16px; margin-top: 14px; font-size: 0.82rem; color: #888; text-align: center; border: 1px solid #0f3460; min-height: 44px; }
 
-/* Progress */
-.progress { height: 4px; background: var(--rand); border-radius: 2px; margin-top: 10px; display: none; }
-.progress-bar { height: 100%; background: var(--goud); width: 0%; border-radius: 2px; transition: width 0.2s; }
+.progress { height: 4px; background: #0f3460; border-radius: 2px; margin-top: 10px; display: none; }
+.progress-bar { height: 100%; background: #c9a84c; width: 0%; border-radius: 2px; transition: width 0.2s; }
 
-/* Kaart grid */
-#kaarten-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 14px;
-  margin-top: 14px;
-}
-.kaart-item {
-  background: var(--panel);
-  border-radius: 14px;
-  overflow: hidden;
-  border: 1px solid var(--rand);
-}
+#deel-alles { display: none; width: 100%; padding: 15px; background: #27ae60; color: #fff; border: none; border-radius: 14px; font-size: 1rem; font-weight: bold; cursor: pointer; margin-top: 14px; }
+
+#kaarten-grid { margin-top: 14px; display: grid; grid-template-columns: 1fr; gap: 14px; }
+.kaart-item { background: #16213e; border-radius: 14px; overflow: hidden; border: 1px solid #0f3460; }
 .kaart-item img { width: 100%; display: block; }
-.kaart-footer {
-  padding: 10px 14px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-.kaart-naam {
-  font-size: 0.8rem;
-  color: var(--goud);
-  font-weight: bold;
-  flex: 1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.deel-knop {
-  background: var(--goud);
-  color: #1a1a2e;
-  border: none;
-  border-radius: 8px;
-  padding: 8px 16px;
-  font-size: 0.82rem;
-  font-weight: bold;
-  cursor: pointer;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-.deel-knop:active { background: #e0bf6a; }
-.deel-knop.groen { background: #27ae60; color: #fff; }
-
-/* Alles delen knop */
-#deel-alles {
-  display: none;
-  width: 100%;
-  padding: 15px;
-  background: #27ae60;
-  color: #fff;
-  border: none;
-  border-radius: 14px;
-  font-size: 1rem;
-  font-weight: bold;
-  cursor: pointer;
-  margin-top: 6px;
-}
-#deel-alles:active { background: #2ecc71; }
-
-/* Formaat badge */
-.formaat-badge {
-  display: inline-block;
-  background: #c9a84c22;
-  color: var(--goud);
-  border: 1px solid #c9a84c44;
-  border-radius: 6px;
-  font-size: 0.68rem;
-  padding: 2px 8px;
-  margin-top: 6px;
-}
+.kaart-footer { padding: 10px 14px; display: flex; align-items: center; gap: 8px; }
+.kaart-naam { font-size: 0.8rem; color: #c9a84c; font-weight: bold; flex: 1; }
+.deel-knop { background: #c9a84c; color: #1a1a2e; border: none; border-radius: 8px; padding: 8px 16px; font-size: 0.82rem; font-weight: bold; cursor: pointer; }
 </style>
 </head>
 <body>
@@ -174,149 +56,129 @@ header p  { font-size: 0.72rem; color: #666; margin-top: 2px; }
 
 <div class="sectie">
 
-  <!-- Upload -->
-  <label class="upload-zone" id="upload-zone" for="foto-input">
-    <div class="upload-icoon">🖼️</div>
-    <div class="upload-tekst">
-      Tik om een tarotlegging te kiezen<br>
-      <strong>Tarot_Legging_Kaarten</strong> of <strong>Tarot_Legging_Uitleg</strong>
-    </div>
-    <input type="file" id="foto-input" accept="image/*" style="display:none;">
+  <label class="upload" for="foto-input">
+    <span class="icoon">🖼️</span>
+    <span class="tekst">
+      Tik hier om een foto te kiezen
+      <strong>Tarot_Legging_Kaarten of Tarot_Legging_Uitleg</strong>
+    </span>
   </label>
+  <input type="file" id="foto-input" accept="image/*">
 
-  <!-- API key -->
-  <div class="api-veld">
+  <div class="veld">
     <label>Anthropic API key (voor naamherkenning)</label>
     <input type="password" id="api-key" placeholder="sk-ant-...">
   </div>
 
-  <!-- Status -->
-  <div id="status-balk">Kies een afbeelding om te beginnen</div>
+  <div id="status">Kies een afbeelding om te beginnen</div>
   <div class="progress" id="prog"><div class="progress-bar" id="pb"></div></div>
 
-  <!-- Deel alles -->
-  <button id="deel-alles" onclick="deelAlles()">📤 Alle 3 kaarten delen</button>
+  <button id="deel-alles">📤 Alle 3 kaarten delen</button>
 
-  <!-- Kaarten -->
   <div id="kaarten-grid"></div>
 
 </div>
 
 <script>
-// ── Coördinaten (gebaseerd op 3180px breedte) ────────
 const FORMATS = {
   "Tarot_Legging_Kaarten": {
-    ref_breedte: 3180,  // referentie breedte waarop coördinaten zijn gebaseerd
-    hoogte_max: 2500,
+    ref_breedte: 3180, hoogte_max: 2500,
     kaarten: [
-      { naam: "VERLEDEN", rect: [ 200, 200,  980, 1730] },
-      { naam: "HEDEN",    rect: [1250, 200, 2030, 1730] },
-      { naam: "TOEKOMST", rect: [2250, 200, 3030, 1730] },
+      { naam: "VERLEDEN", rect: [ 150, 150,  950, 1520] },
+      { naam: "HEDEN",    rect: [1070, 150, 1870, 1520] },
+      { naam: "TOEKOMST", rect: [1990, 150, 2790, 1520] },
     ]
   },
   "Tarot_Legging_Uitleg": {
-    ref_breedte: 3180,
-    hoogte_max: 9999,
+    ref_breedte: 3180, hoogte_max: 9999,
     kaarten: [
-      { naam: "VERLEDEN", rect: [ 200, 200,  980, 1730] },
-      { naam: "HEDEN",    rect: [1250, 200, 2030, 1730] },
-      { naam: "TOEKOMST", rect: [2250, 200, 3030, 1730] },
+      { naam: "VERLEDEN", rect: [ 150, 150,  950, 1520] },
+      { naam: "HEDEN",    rect: [1070, 150, 1870, 1520] },
+      { naam: "TOEKOMST", rect: [1990, 150, 2790, 1520] },
     ]
   }
 };
 
 const UIT_B = 2160, UIT_H = 3840;
 let uitvoerCanvas = [];
-let huidigNamen   = ["VERLEDEN", "HEDEN", "TOEKOMST"];
+let huidigNamen = ["VERLEDEN", "HEDEN", "TOEKOMST"];
 
-// ── API key opslaan ───────────────────────────────────
+// API key
 const keyInput = document.getElementById('api-key');
-try { const k = localStorage.getItem('tarot_api_key'); if (k) keyInput.value = k; } catch(e){}
+try { const k = localStorage.getItem('tarot_api_key'); if (k) keyInput.value = k; } catch(e) {}
 keyInput.addEventListener('input', () => {
-  try { localStorage.setItem('tarot_api_key', keyInput.value.trim()); } catch(e){}
+  try { localStorage.setItem('tarot_api_key', keyInput.value.trim()); } catch(e) {}
 });
 
-// ── Upload ────────────────────────────────────────────
-const fotoInput = document.getElementById('foto-input');
-fotoInput.onchange = e => verwerkAfbeelding(e.target.files[0]);
+// Bestand kiezen
+document.getElementById('foto-input').addEventListener('change', function() {
+  if (this.files && this.files[0]) {
+    verwerkAfbeelding(this.files[0]);
+  }
+});
 
 function setStatus(t, kleur) {
-  const el = document.getElementById('status-balk');
+  const el = document.getElementById('status');
   el.textContent = t;
   el.style.color = kleur || '#888';
 }
 
 function setProgress(p) {
   const prog = document.getElementById('prog');
-  prog.style.display = p < 100 ? 'block' : 'none';
+  prog.style.display = p > 0 && p < 100 ? 'block' : 'none';
   document.getElementById('pb').style.width = p + '%';
 }
 
 async function verwerkAfbeelding(file) {
-  if (!file) return;
   setStatus('Afbeelding laden...', '#888');
   document.getElementById('kaarten-grid').innerHTML = '';
   document.getElementById('deel-alles').style.display = 'none';
   uitvoerCanvas = [];
+  huidigNamen = ["VERLEDEN", "HEDEN", "TOEKOMST"];
 
-  const img = await laadAfbeelding(file);
+  let img;
+  try {
+    img = await laadAfbeelding(file);
+  } catch(e) {
+    setStatus('❌ Kon afbeelding niet laden: ' + e.message, '#e74c3c');
+    return;
+  }
+
   const W = img.width, H = img.height;
 
-  // Detecteer formaat
+  // Formaat detecteren
   let formatKey = null;
-  const naam = file.name;
-  if (naam.includes('Tarot_Legging_Kaarten')) formatKey = 'Tarot_Legging_Kaarten';
-  else if (naam.includes('Tarot_Legging_Uitleg')) formatKey = 'Tarot_Legging_Uitleg';
+  if (file.name.includes('Tarot_Legging_Kaarten')) formatKey = 'Tarot_Legging_Kaarten';
+  else if (file.name.includes('Tarot_Legging_Uitleg')) formatKey = 'Tarot_Legging_Uitleg';
   else formatKey = H < 2500 ? 'Tarot_Legging_Kaarten' : 'Tarot_Legging_Uitleg';
 
   const fmt = FORMATS[formatKey];
   const schaal = W / fmt.ref_breedte;
 
-  // Toon debug info
-  setStatus(`📐 Afbeelding: ${W}×${H}px | Formaat: ${formatKey} | Schaal: ${schaal.toFixed(3)}×`, '#c9a84c');
-  await sleep(2000);
-
-  // Toon geschaalde coördinaten
-  const coords = fmt.kaarten.map((k,i) => {
-    const x0 = Math.round(k.rect[0]*schaal);
-    const y0 = Math.round(k.rect[1]*schaal);
-    const x1 = Math.round(k.rect[2]*schaal);
-    const y1 = Math.round(k.rect[3]*schaal);
-    return `K${i+1}: ${x0},${y0}→${x1},${y1} (${x1-x0}×${y1-y0})`;
-  }).join(' | ');
-  setStatus(`✂️ ${coords}`, '#888');
-  await sleep(3000);
+  setStatus(`${W}×${H}px · ${formatKey} · schaal ${schaal.toFixed(2)}×`, '#c9a84c');
 
   // Naamherkenning
   const apiKey = keyInput.value.trim();
   if (apiKey) {
-    setStatus('🤖 Claude herkent kaartnamen...', '#9b59b6');
+    setStatus('🤖 Claude herkent namen...', '#9b59b6');
     const namen = await detecteerNamen(file, apiKey);
     if (namen) huidigNamen = namen;
   }
 
   // Kaarten uitsnijden
-  const fmt = FORMATS[formatKey];
-  setProgress(0);
-
-  // Schaalfactor: pas coördinaten aan voor werkelijke beeldgrootte
-  const schaal = img.width / fmt.ref_breedte;
-
+  setProgress(10);
   for (let i = 0; i < fmt.kaarten.length; i++) {
     const k = fmt.kaarten[i];
-    // Schaal coördinaten mee met de werkelijke afbeeldingsbreedte
     const x0 = Math.round(k.rect[0] * schaal);
     const y0 = Math.round(k.rect[1] * schaal);
     const x1 = Math.round(k.rect[2] * schaal);
     const y1 = Math.round(k.rect[3] * schaal);
     const cw = x1 - x0, ch = y1 - y0;
 
-    // Uitsnijden
     const src = document.createElement('canvas');
     src.width = cw; src.height = ch;
     src.getContext('2d').drawImage(img, x0, y0, cw, ch, 0, 0, cw, ch);
 
-    // Schalen naar uitvoerformaat
     const uit = document.createElement('canvas');
     uit.width = UIT_B; uit.height = UIT_H;
     const ctx = uit.getContext('2d');
@@ -327,7 +189,7 @@ async function verwerkAfbeelding(file) {
     ctx.drawImage(src, 0, 0, UIT_B, UIT_H);
 
     uitvoerCanvas.push(uit);
-    setProgress((i + 1) / 3 * 100);
+    setProgress(((i + 1) / 3) * 100);
     toonKaart(uit, huidigNamen[i] || k.naam, i);
     await sleep(30);
   }
@@ -338,14 +200,12 @@ async function verwerkAfbeelding(file) {
 }
 
 function toonKaart(canvas, naam, idx) {
-  const grid = document.getElementById('kaarten-grid');
   const item = document.createElement('div');
   item.className = 'kaart-item';
 
-  // Miniatuur
-  const thumb = document.createElement('canvas');
-  const tw = Math.min(window.innerWidth - 32, 600);
+  const tw = Math.min(window.innerWidth - 32, 500);
   const th = Math.round(tw * UIT_H / UIT_B);
+  const thumb = document.createElement('canvas');
   thumb.width = tw; thumb.height = th;
   thumb.style.width = '100%';
   thumb.getContext('2d').drawImage(canvas, 0, 0, tw, th);
@@ -362,47 +222,44 @@ function toonKaart(canvas, naam, idx) {
   const knop = document.createElement('button');
   knop.className = 'deel-knop';
   knop.textContent = '📤 Deel';
-  knop.onclick = () => deelKaart(canvas, naam);
+  knop.addEventListener('click', () => deelKaart(canvas, naam));
   footer.appendChild(knop);
 
   item.appendChild(footer);
-  grid.appendChild(item);
+  document.getElementById('kaarten-grid').appendChild(item);
 }
 
 async function deelKaart(canvas, naam) {
   try {
     const blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 1.0));
-    const file = new File([blob], `${naam}.jpg`, { type: 'image/jpeg' });
+    const file = new File([blob], naam + '.jpg', { type: 'image/jpeg' });
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
       await navigator.share({ files: [file], title: naam });
     } else {
-      // Fallback: download
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
-      a.download = `${naam}.jpg`;
+      a.download = naam + '.jpg';
       a.click();
     }
   } catch(e) {
-    if (e.name !== 'AbortError') alert('Fout bij delen: ' + e.message);
+    if (e.name !== 'AbortError') alert('Fout: ' + e.message);
   }
 }
 
-async function deelAlles() {
-  const namen = huidigNamen;
+document.getElementById('deel-alles').addEventListener('click', async () => {
   const files = [];
   for (let i = 0; i < uitvoerCanvas.length; i++) {
     const blob = await new Promise(r => uitvoerCanvas[i].toBlob(r, 'image/jpeg', 1.0));
-    files.push(new File([blob], `${namen[i] || 'kaart_'+(i+1)}.jpg`, { type: 'image/jpeg' }));
+    files.push(new File([blob], (huidigNamen[i] || 'kaart_' + (i+1)) + '.jpg', { type: 'image/jpeg' }));
   }
   try {
     if (navigator.canShare && navigator.canShare({ files })) {
       await navigator.share({ files, title: 'Tarotkaarten' });
     } else {
-      // Fallback: één voor één downloaden
-      for (let i = 0; i < files.length; i++) {
+      for (const f of files) {
         const a = document.createElement('a');
-        a.href = URL.createObjectURL(files[i]);
-        a.download = files[i].name;
+        a.href = URL.createObjectURL(f);
+        a.download = f.name;
         a.click();
         await sleep(300);
       }
@@ -410,9 +267,8 @@ async function deelAlles() {
   } catch(e) {
     if (e.name !== 'AbortError') alert('Fout: ' + e.message);
   }
-}
+});
 
-// ── AI Naamherkenning ─────────────────────────────────
 async function detecteerNamen(file, apiKey) {
   try {
     const b64 = await bestandNaarBase64(file);
@@ -430,7 +286,7 @@ async function detecteerNamen(file, apiKey) {
         messages: [{
           role: 'user',
           content: [
-            { type: 'image', source: { type: 'base64', media_type: file.type || 'image/jpeg', data: b64 }},
+            { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: b64 }},
             { type: 'text', text: 'Dit is een tarotlegging met 3 kaarten naast elkaar. Elke kaart heeft een naam onderaan. Geef ALLEEN de 3 namen terug van links naar rechts. Één naam per regel, geen nummers, geen extra tekst.' }
           ]
         }]
@@ -440,7 +296,7 @@ async function detecteerNamen(file, apiKey) {
     const data = await resp.json();
     const namen = data.content[0].text.trim().split('\n').map(s => s.trim()).filter(Boolean).slice(0, 3);
     while (namen.length < 3) namen.push('');
-    setStatus(`Namen: ${namen.join(', ')}`, '#27ae60');
+    setStatus('Namen: ' + namen.join(', '), '#27ae60');
     return namen;
   } catch(e) {
     setStatus('Naamherkenning mislukt, doorgaan...', '#e74c3c');
@@ -448,13 +304,13 @@ async function detecteerNamen(file, apiKey) {
   }
 }
 
-// ── Helpers ───────────────────────────────────────────
 function laadAfbeelding(file) {
   return new Promise((res, rej) => {
     const img = new Image();
-    img.onload = () => res(img);
-    img.onerror = rej;
-    img.src = URL.createObjectURL(file);
+    const url = URL.createObjectURL(file);
+    img.onload = () => { URL.revokeObjectURL(url); res(img); };
+    img.onerror = () => { URL.revokeObjectURL(url); rej(new Error('Laden mislukt')); };
+    img.src = url;
   });
 }
 
