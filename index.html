@@ -82,15 +82,7 @@ label.upload .tekst strong { color: #c9a84c; display: block; margin-top: 6px; }
 <script>
 const FORMATS = {
   "Tarot_Legging_Kaarten": {
-    ref_breedte: 3180, hoogte_max: 2500,
-    kaarten: [
-      { naam: "VERLEDEN", rect: [ 150, 150,  950, 1520] },
-      { naam: "HEDEN",    rect: [1070, 150, 1870, 1520] },
-      { naam: "TOEKOMST", rect: [1990, 150, 2790, 1520] },
-    ]
-  },
-  "Tarot_Legging_Uitleg": {
-    ref_breedte: 3180, hoogte_max: 9999,
+    ref_breedte: 2940, hoogte_max: 9999,
     kaarten: [
       { naam: "VERLEDEN", rect: [ 150, 150,  950, 1520] },
       { naam: "HEDEN",    rect: [1070, 150, 1870, 1520] },
@@ -146,11 +138,8 @@ async function verwerkAfbeelding(file) {
 
   const W = img.width, H = img.height;
 
-  // Formaat detecteren
-  let formatKey = null;
-  if (file.name.includes('Tarot_Legging_Kaarten')) formatKey = 'Tarot_Legging_Kaarten';
-  else if (file.name.includes('Tarot_Legging_Uitleg')) formatKey = 'Tarot_Legging_Uitleg';
-  else formatKey = H < 2500 ? 'Tarot_Legging_Kaarten' : 'Tarot_Legging_Uitleg';
+  // Altijd Tarot_Legging_Kaarten
+  const formatKey = 'Tarot_Legging_Kaarten';
 
   const fmt = FORMATS[formatKey];
   const schaal = W / fmt.ref_breedte;
