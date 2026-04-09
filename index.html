@@ -210,18 +210,18 @@ const FORMATS = {
     ref_breedte: 3180,  // referentie breedte waarop coördinaten zijn gebaseerd
     hoogte_max: 2500,
     kaarten: [
-      { naam: "VERLEDEN", rect: [ 150, 150,  950, 1520] },
-      { naam: "HEDEN",    rect: [1070, 150, 1870, 1520] },
-      { naam: "TOEKOMST", rect: [1990, 150, 2790, 1520] },
+      { naam: "VERLEDEN", rect: [ 200, 200,  980, 1730] },
+      { naam: "HEDEN",    rect: [1250, 200, 2030, 1730] },
+      { naam: "TOEKOMST", rect: [2250, 200, 3030, 1730] },
     ]
   },
   "Tarot_Legging_Uitleg": {
     ref_breedte: 3180,
     hoogte_max: 9999,
     kaarten: [
-      { naam: "VERLEDEN", rect: [ 150, 150,  950, 1520] },
-      { naam: "HEDEN",    rect: [1070, 150, 1870, 1520] },
-      { naam: "TOEKOMST", rect: [1990, 150, 2790, 1520] },
+      { naam: "VERLEDEN", rect: [ 200, 200,  980, 1730] },
+      { naam: "HEDEN",    rect: [1250, 200, 2030, 1730] },
+      { naam: "TOEKOMST", rect: [2250, 200, 3030, 1730] },
     ]
   }
 };
@@ -263,17 +263,30 @@ async function verwerkAfbeelding(file) {
   const img = await laadAfbeelding(file);
   const W = img.width, H = img.height;
 
-  // Detecteer formaat op basis van bestandsnaam of afmetingen
+  // Detecteer formaat
   let formatKey = null;
   const naam = file.name;
   if (naam.includes('Tarot_Legging_Kaarten')) formatKey = 'Tarot_Legging_Kaarten';
   else if (naam.includes('Tarot_Legging_Uitleg')) formatKey = 'Tarot_Legging_Uitleg';
-  else {
-    // Detecteer op hoogte
-    formatKey = H < 2500 ? 'Tarot_Legging_Kaarten' : 'Tarot_Legging_Uitleg';
-  }
+  else formatKey = H < 2500 ? 'Tarot_Legging_Kaarten' : 'Tarot_Legging_Uitleg';
 
-  setStatus(`Formaat: ${formatKey} (${W}×${H})`, '#c9a84c');
+  const fmt = FORMATS[formatKey];
+  const schaal = W / fmt.ref_breedte;
+
+  // Toon debug info
+  setStatus(`📐 Afbeelding: ${W}×${H}px | Formaat: ${formatKey} | Schaal: ${schaal.toFixed(3)}×`, '#c9a84c');
+  await sleep(2000);
+
+  // Toon geschaalde coördinaten
+  const coords = fmt.kaarten.map((k,i) => {
+    const x0 = Math.round(k.rect[0]*schaal);
+    const y0 = Math.round(k.rect[1]*schaal);
+    const x1 = Math.round(k.rect[2]*schaal);
+    const y1 = Math.round(k.rect[3]*schaal);
+    return `K${i+1}: ${x0},${y0}→${x1},${y1} (${x1-x0}×${y1-y0})`;
+  }).join(' | ');
+  setStatus(`✂️ ${coords}`, '#888');
+  await sleep(3000);
 
   // Naamherkenning
   const apiKey = keyInput.value.trim();
