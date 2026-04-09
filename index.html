@@ -1,393 +1,461 @@
-#!/usr/bin/env python3
-"""
-Tarotkaart Knipper — PDF, Tarot_Legging_Kaarten, Tarot_Legging_Uitleg
-Gebruik: python3 tarot_knipper.py
-"""
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Tarot Knipper</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+:root {
+  --goud: #c9a84c;
+  --donker: #1a1a2e;
+  --panel: #16213e;
+  --rand: #0f3460;
+  --tekst: #eee;
+}
+body {
+  font-family: -apple-system, sans-serif;
+  background: var(--donker);
+  color: var(--tekst);
+  min-height: 100vh;
+  padding: 0 0 40px 0;
+}
+header {
+  background: var(--panel);
+  border-bottom: 1px solid var(--rand);
+  padding: 16px 20px 12px;
+  text-align: center;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+header h1 { font-size: 1.2rem; color: var(--goud); }
+header p  { font-size: 0.72rem; color: #666; margin-top: 2px; }
 
-import fitz
-import sys
-import json
-import base64
-import ssl
-import io
-import urllib.request
-import urllib.error
-from pathlib import Path
+.sectie { padding: 16px; }
 
-# ── Uitvoerinstellingen ───────────────────────────────
-UITVOER_BREEDTE = 2160
-UITVOER_HOOGTE  = 3840
-JPEG_KWALITEIT  = 100
-UITVOER_FORMAAT = "png"
-DOEL_DPI        = 300
-PDF_BASIS_DPI   = 72
-# ─────────────────────────────────────────────────────
+/* Upload knop */
+.upload-zone {
+  border: 2px dashed #c9a84c44;
+  border-radius: 14px;
+  padding: 36px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: var(--panel);
+}
+.upload-zone.actief { border-color: var(--goud); background: #c9a84c11; }
+.upload-zone input { display: none; }
+.upload-icoon { font-size: 3rem; margin-bottom: 10px; }
+.upload-tekst { color: #aaa; font-size: 0.9rem; line-height: 1.5; }
+.upload-tekst strong { color: var(--goud); }
 
-FORMATS = {
-    "Tarot_Legging_Kaarten": {
-        "breedte": 3180, "hoogte": 2252,
-        "kaarten": [
-            {"naam": "VERLEDEN", "rect": ( 150, 150,  950, 1520)},
-            {"naam": "HEDEN",    "rect": (1070, 150, 1870, 1520)},
-            {"naam": "TOEKOMST", "rect": (1990, 150, 2790, 1520)},
-        ]
-    },
-    "Tarot_Legging_Uitleg": {
-        "breedte": 3180, "hoogte": 4101,
-        "kaarten": [
-            {"naam": "VERLEDEN", "rect": ( 150, 150,  950, 1520)},
-            {"naam": "HEDEN",    "rect": (1070, 150, 1870, 1520)},
-            {"naam": "TOEKOMST", "rect": (1990, 150, 2790, 1520)},
-        ]
-    },
+/* API key */
+.api-veld {
+  background: var(--panel);
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-top: 14px;
+  border: 1px solid var(--rand);
+}
+.api-veld label { font-size: 0.75rem; color: #777; display: block; margin-bottom: 6px; }
+.api-veld input {
+  width: 100%;
+  background: var(--rand);
+  border: 1px solid #1a4a8a;
+  color: var(--tekst);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 0.78rem;
+  font-family: monospace;
 }
 
-CONFIG_BESTAND  = Path.home() / ".tarot_knipper_config"
-API_KEY_BESTAND = Path.home() / ".tarot_api_key"
+/* Status */
+#status-balk {
+  background: var(--panel);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-top: 14px;
+  font-size: 0.82rem;
+  color: #888;
+  text-align: center;
+  border: 1px solid var(--rand);
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
-ssl_context = ssl.create_default_context()
-ssl_context.check_hostname = False
-ssl_context.verify_mode = ssl.CERT_NONE
+/* Progress */
+.progress { height: 4px; background: var(--rand); border-radius: 2px; margin-top: 10px; display: none; }
+.progress-bar { height: 100%; background: var(--goud); width: 0%; border-radius: 2px; transition: width 0.2s; }
 
+/* Kaart grid */
+#kaarten-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+  margin-top: 14px;
+}
+.kaart-item {
+  background: var(--panel);
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid var(--rand);
+}
+.kaart-item img { width: 100%; display: block; }
+.kaart-footer {
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.kaart-naam {
+  font-size: 0.8rem;
+  color: var(--goud);
+  font-weight: bold;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.deel-knop {
+  background: var(--goud);
+  color: #1a1a2e;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 0.82rem;
+  font-weight: bold;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.deel-knop:active { background: #e0bf6a; }
+.deel-knop.groen { background: #27ae60; color: #fff; }
 
-# ── Config ────────────────────────────────────────────
+/* Alles delen knop */
+#deel-alles {
+  display: none;
+  width: 100%;
+  padding: 15px;
+  background: #27ae60;
+  color: #fff;
+  border: none;
+  border-radius: 14px;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 6px;
+}
+#deel-alles:active { background: #2ecc71; }
 
-def laad_config():
-    try:
-        waarden = {}
-        for regel in CONFIG_BESTAND.read_text().splitlines():
-            if '=' in regel:
-                k, v = regel.split('=')
-                waarden[k.strip()] = float(v.strip())
-        ml = waarden.get('ml', 18)
-        mr = waarden.get('mr', 6)
-        mt = waarden.get('mt', 9)
-        mb = waarden.get('mb', 9)
-        gx = waarden.get('gx', 5)
-        gy = waarden.get('gy', 5)
-        print(f"  ✓ Vorige instellingen geladen: L={ml} R={mr} B={mt} O={mb} X={gx} Y={gy}")
-        return ml, mr, mt, mb, gx, gy
-    except:
-        print("  (Geen opgeslagen instellingen, standaard waarden gebruikt)")
-        return 18, 6, 9, 9, 5, 5
+/* Formaat badge */
+.formaat-badge {
+  display: inline-block;
+  background: #c9a84c22;
+  color: var(--goud);
+  border: 1px solid #c9a84c44;
+  border-radius: 6px;
+  font-size: 0.68rem;
+  padding: 2px 8px;
+  margin-top: 6px;
+}
+</style>
+</head>
+<body>
 
+<header>
+  <h1>🃏 Tarot Knipper</h1>
+  <p>Samsung Frame TV · 2160×3840</p>
+</header>
 
-def sla_config_op(ml, mr, mt, mb, gx, gy):
-    CONFIG_BESTAND.write_text(f"ml={ml}\nmr={mr}\nmt={mt}\nmb={mb}\ngx={gx}\ngy={gy}\n")
-    print("  💾 Instellingen opgeslagen")
+<div class="sectie">
 
+  <!-- Upload -->
+  <div class="upload-zone" id="upload-zone" onclick="document.getElementById('foto-input').click()">
+    <div class="upload-icoon">🖼️</div>
+    <div class="upload-tekst">
+      Tik om een tarotlegging te kiezen<br>
+      <strong>Tarot_Legging_Kaarten</strong> of <strong>Tarot_Legging_Uitleg</strong>
+    </div>
+    <input type="file" id="foto-input" accept="image/*">
+  </div>
 
-def laad_api_key():
-    try:
-        key = API_KEY_BESTAND.read_text().strip()
-        if key:
-            print("  ✓ API key geladen")
-            return key
-    except:
-        pass
-    return None
+  <!-- API key -->
+  <div class="api-veld">
+    <label>Anthropic API key (voor naamherkenning)</label>
+    <input type="password" id="api-key" placeholder="sk-ant-...">
+  </div>
 
+  <!-- Status -->
+  <div id="status-balk">Kies een afbeelding om te beginnen</div>
+  <div class="progress" id="prog"><div class="progress-bar" id="pb"></div></div>
 
-def sla_api_key_op(key):
-    API_KEY_BESTAND.write_text(key)
-    print("  💾 API key opgeslagen")
+  <!-- Deel alles -->
+  <button id="deel-alles" onclick="deelAlles()">📤 Alle 3 kaarten delen</button>
 
+  <!-- Kaarten -->
+  <div id="kaarten-grid"></div>
 
-# ── PDF Preview + kalibratie ──────────────────────────
+</div>
 
-def toon_preview_pdf(pagina, marges, pdf_pad):
-    ml, mr, mt, mb, gx, gy = marges
-    b = pagina.rect.width
-    h = pagina.rect.height
-    cel_b = (b - ml - mr - 2 * gx) / 3
-    cel_h = (h - mt - mb - 2 * gy) / 3
-    zoom = 2
-    pix  = pagina.get_pixmap(matrix=fitz.Matrix(zoom, zoom), alpha=False)
-    tmp_doc = fitz.open()
-    tmp_pag = tmp_doc.new_page(width=pix.width, height=pix.height)
-    tmp_pag.insert_image(tmp_pag.rect, pixmap=pix)
-    shape = tmp_pag.new_shape()
-    for rij in range(3):
-        for kolom in range(3):
-            x0 = (ml + kolom * (cel_b + gx)) * zoom
-            y0 = (mt + rij   * (cel_h + gy)) * zoom
-            shape.draw_rect(fitz.Rect(x0, y0, x0 + cel_b * zoom, y0 + cel_h * zoom))
-    shape.finish(color=(1, 0, 0), width=3, fill=None)
-    shape.commit()
-    preview_pad = pdf_pad.parent / "preview_snijraster.jpg"
-    tmp_doc[0].get_pixmap(matrix=fitz.Matrix(1, 1), alpha=False).save(str(preview_pad))
-    tmp_doc.close()
-    print(f"\n  📸 Preview: {preview_pad}")
-    print("     Open dit bestand om de snijlijnen te controleren.")
+<script>
+// ── Coördinaten (gebaseerd op 3180px breedte) ────────
+const FORMATS = {
+  "Tarot_Legging_Kaarten": {
+    ref_breedte: 3180,  // referentie breedte waarop coördinaten zijn gebaseerd
+    hoogte_max: 2500,
+    kaarten: [
+      { naam: "VERLEDEN", rect: [ 200, 200,  980, 1730] },
+      { naam: "HEDEN",    rect: [1250, 200, 2030, 1730] },
+      { naam: "TOEKOMST", rect: [2250, 200, 3030, 1730] },
+    ]
+  },
+  "Tarot_Legging_Uitleg": {
+    ref_breedte: 3180,
+    hoogte_max: 9999,
+    kaarten: [
+      { naam: "VERLEDEN", rect: [ 200, 200,  980, 1730] },
+      { naam: "HEDEN",    rect: [1250, 200, 2030, 1730] },
+      { naam: "TOEKOMST", rect: [2250, 200, 3030, 1730] },
+    ]
+  }
+};
 
+const UIT_B = 2160, UIT_H = 3840;
+let uitvoerCanvas = [];
+let huidigNamen   = ["VERLEDEN", "HEDEN", "TOEKOMST"];
 
-def vraag_marges(pagina, pdf_pad, marges):
-    b = pagina.rect.width
-    h = pagina.rect.height
-    print(f"\nPagina afmetingen: {b:.1f} × {h:.1f} punten")
-    ml, mr, mt, mb, gx, gy = marges
+// ── API key opslaan ───────────────────────────────────
+const keyInput = document.getElementById('api-key');
+try { const k = localStorage.getItem('tarot_api_key'); if (k) keyInput.value = k; } catch(e){}
+keyInput.addEventListener('input', () => {
+  try { localStorage.setItem('tarot_api_key', keyInput.value.trim()); } catch(e){}
+});
 
-    while True:
-        cel_b = (b - ml - mr - 2 * gx) / 3
-        cel_h = (h - mt - mb - 2 * gy) / 3
-        print(f"\nHuidige marges:")
-        print(f"  Links={ml}  Rechts={mr}  Boven={mt}  Onder={mb}  Tussen-X={gx}  Tussen-Y={gy}")
-        print(f"  → Celgrootte: {cel_b:.1f} × {cel_h:.1f} punten")
-        toon_preview_pdf(pagina, (ml, mr, mt, mb, gx, gy), pdf_pad)
-        print("\nOpties:")
-        print("  [Enter]        → Goed! Doorgaan")
-        print("  l=20 r=10 ...  → Waarden aanpassen (l r b o x y)")
-        invoer = input("\nInvoer: ").strip().lower()
-        if invoer == "":
-            sla_config_op(ml, mr, mt, mb, gx, gy)
-            break
-        try:
-            for deel in invoer.split():
-                if '=' in deel:
-                    k, v = deel.split('=')
-                    v = float(v)
-                    if   k == 'l': ml = v
-                    elif k == 'r': mr = v
-                    elif k == 'b': mt = v
-                    elif k == 'o': mb = v
-                    elif k == 'x': gx = v
-                    elif k == 'y': gy = v
-        except Exception as e:
-            print(f"  Fout: {e}")
+// ── Upload ────────────────────────────────────────────
+const fotoInput = document.getElementById('foto-input');
+fotoInput.onchange = e => verwerkAfbeelding(e.target.files[0]);
 
-    return ml, mr, mt, mb, gx, gy
+function setStatus(t, kleur) {
+  const el = document.getElementById('status-balk');
+  el.textContent = t;
+  el.style.color = kleur || '#888';
+}
 
+function setProgress(p) {
+  const prog = document.getElementById('prog');
+  prog.style.display = p < 100 ? 'block' : 'none';
+  document.getElementById('pb').style.width = p + '%';
+}
 
-# ── AI Naamherkenning ─────────────────────────────────
+async function verwerkAfbeelding(file) {
+  if (!file) return;
+  setStatus('Afbeelding laden...', '#888');
+  document.getElementById('kaarten-grid').innerHTML = '';
+  document.getElementById('deel-alles').style.display = 'none';
+  uitvoerCanvas = [];
 
-def stuur_api_request(b64, media_type, aantal, api_key):
-    tekst = (
-        "Dit is een pagina met 9 tarotkaarten in een 3x3 grid. Elke kaart heeft onderaan een naam. "
-        "Geef ALLEEN de 9 namen terug, van links naar rechts en van boven naar beneden. "
-        "Één naam per regel, geen nummers, geen extra tekst, geen lege regels."
-        if aantal == 9 else
-        "Dit is een tarotlegging met 3 kaarten naast elkaar. Elke kaart heeft een naam onderaan. "
-        "Geef ALLEEN de 3 namen terug van links naar rechts. "
-        "Één naam per regel, geen nummers, geen extra tekst."
-    )
-    payload = json.dumps({
-        "model": "claude-opus-4-5",
-        "max_tokens": 200,
-        "messages": [{
-            "role": "user",
-            "content": [
-                {"type": "image", "source": {"type": "base64", "media_type": media_type, "data": b64}},
-                {"type": "text", "text": tekst}
-            ]
+  const img = await laadAfbeelding(file);
+  const W = img.width, H = img.height;
+
+  // Detecteer formaat op basis van bestandsnaam of afmetingen
+  let formatKey = null;
+  const naam = file.name;
+  if (naam.includes('Tarot_Legging_Kaarten')) formatKey = 'Tarot_Legging_Kaarten';
+  else if (naam.includes('Tarot_Legging_Uitleg')) formatKey = 'Tarot_Legging_Uitleg';
+  else {
+    // Detecteer op hoogte
+    formatKey = H < 2500 ? 'Tarot_Legging_Kaarten' : 'Tarot_Legging_Uitleg';
+  }
+
+  setStatus(`Formaat: ${formatKey} (${W}×${H})`, '#c9a84c');
+
+  // Naamherkenning
+  const apiKey = keyInput.value.trim();
+  if (apiKey) {
+    setStatus('🤖 Claude herkent kaartnamen...', '#9b59b6');
+    const namen = await detecteerNamen(file, apiKey);
+    if (namen) huidigNamen = namen;
+  }
+
+  // Kaarten uitsnijden
+  const fmt = FORMATS[formatKey];
+  setProgress(0);
+
+  // Schaalfactor: pas coördinaten aan voor werkelijke beeldgrootte
+  const schaal = img.width / fmt.ref_breedte;
+
+  for (let i = 0; i < fmt.kaarten.length; i++) {
+    const k = fmt.kaarten[i];
+    // Schaal coördinaten mee met de werkelijke afbeeldingsbreedte
+    const x0 = Math.round(k.rect[0] * schaal);
+    const y0 = Math.round(k.rect[1] * schaal);
+    const x1 = Math.round(k.rect[2] * schaal);
+    const y1 = Math.round(k.rect[3] * schaal);
+    const cw = x1 - x0, ch = y1 - y0;
+
+    // Uitsnijden
+    const src = document.createElement('canvas');
+    src.width = cw; src.height = ch;
+    src.getContext('2d').drawImage(img, x0, y0, cw, ch, 0, 0, cw, ch);
+
+    // Schalen naar uitvoerformaat
+    const uit = document.createElement('canvas');
+    uit.width = UIT_B; uit.height = UIT_H;
+    const ctx = uit.getContext('2d');
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, UIT_B, UIT_H);
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(src, 0, 0, UIT_B, UIT_H);
+
+    uitvoerCanvas.push(uit);
+    setProgress((i + 1) / 3 * 100);
+    toonKaart(uit, huidigNamen[i] || k.naam, i);
+    await sleep(30);
+  }
+
+  setProgress(100);
+  setStatus('✅ 3 kaarten klaar!', '#27ae60');
+  document.getElementById('deel-alles').style.display = 'block';
+}
+
+function toonKaart(canvas, naam, idx) {
+  const grid = document.getElementById('kaarten-grid');
+  const item = document.createElement('div');
+  item.className = 'kaart-item';
+
+  // Miniatuur
+  const thumb = document.createElement('canvas');
+  const tw = Math.min(window.innerWidth - 32, 600);
+  const th = Math.round(tw * UIT_H / UIT_B);
+  thumb.width = tw; thumb.height = th;
+  thumb.style.width = '100%';
+  thumb.getContext('2d').drawImage(canvas, 0, 0, tw, th);
+  item.appendChild(thumb);
+
+  const footer = document.createElement('div');
+  footer.className = 'kaart-footer';
+
+  const naamEl = document.createElement('div');
+  naamEl.className = 'kaart-naam';
+  naamEl.textContent = naam;
+  footer.appendChild(naamEl);
+
+  const knop = document.createElement('button');
+  knop.className = 'deel-knop';
+  knop.textContent = '📤 Deel';
+  knop.onclick = () => deelKaart(canvas, naam);
+  footer.appendChild(knop);
+
+  item.appendChild(footer);
+  grid.appendChild(item);
+}
+
+async function deelKaart(canvas, naam) {
+  try {
+    const blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 1.0));
+    const file = new File([blob], `${naam}.jpg`, { type: 'image/jpeg' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ files: [file], title: naam });
+    } else {
+      // Fallback: download
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `${naam}.jpg`;
+      a.click();
+    }
+  } catch(e) {
+    if (e.name !== 'AbortError') alert('Fout bij delen: ' + e.message);
+  }
+}
+
+async function deelAlles() {
+  const namen = huidigNamen;
+  const files = [];
+  for (let i = 0; i < uitvoerCanvas.length; i++) {
+    const blob = await new Promise(r => uitvoerCanvas[i].toBlob(r, 'image/jpeg', 1.0));
+    files.push(new File([blob], `${namen[i] || 'kaart_'+(i+1)}.jpg`, { type: 'image/jpeg' }));
+  }
+  try {
+    if (navigator.canShare && navigator.canShare({ files })) {
+      await navigator.share({ files, title: 'Tarotkaarten' });
+    } else {
+      // Fallback: één voor één downloaden
+      for (let i = 0; i < files.length; i++) {
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(files[i]);
+        a.download = files[i].name;
+        a.click();
+        await sleep(300);
+      }
+    }
+  } catch(e) {
+    if (e.name !== 'AbortError') alert('Fout: ' + e.message);
+  }
+}
+
+// ── AI Naamherkenning ─────────────────────────────────
+async function detecteerNamen(file, apiKey) {
+  try {
+    const b64 = await bestandNaarBase64(file);
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-opus-4-5',
+        max_tokens: 100,
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'image', source: { type: 'base64', media_type: file.type || 'image/jpeg', data: b64 }},
+            { type: 'text', text: 'Dit is een tarotlegging met 3 kaarten naast elkaar. Elke kaart heeft een naam onderaan. Geef ALLEEN de 3 namen terug van links naar rechts. Één naam per regel, geen nummers, geen extra tekst.' }
+          ]
         }]
-    }).encode()
-    req = urllib.request.Request(
-        "https://api.anthropic.com/v1/messages",
-        data=payload,
-        headers={
-            "Content-Type": "application/json",
-            "x-api-key": api_key,
-            "anthropic-version": "2023-06-01"
-        }
-    )
-    try:
-        with urllib.request.urlopen(req, timeout=30, context=ssl_context) as resp:
-            data = json.loads(resp.read())
-        namen = [r.strip() for r in data["content"][0]["text"].strip().splitlines() if r.strip()][:aantal]
-        while len(namen) < aantal:
-            namen.append("")
-        return namen
-    except urllib.error.HTTPError as e:
-        print(f"  ❌ API fout {e.code}: {e.read().decode()[:200]}")
-    except Exception as e:
-        print(f"  ❌ Fout: {e}")
-    return None
+      })
+    });
+    if (!resp.ok) throw new Error(await resp.text());
+    const data = await resp.json();
+    const namen = data.content[0].text.trim().split('\n').map(s => s.trim()).filter(Boolean).slice(0, 3);
+    while (namen.length < 3) namen.push('');
+    setStatus(`Namen: ${namen.join(', ')}`, '#27ae60');
+    return namen;
+  } catch(e) {
+    setStatus('Naamherkenning mislukt, doorgaan...', '#e74c3c');
+    return null;
+  }
+}
 
+// ── Helpers ───────────────────────────────────────────
+function laadAfbeelding(file) {
+  return new Promise((res, rej) => {
+    const img = new Image();
+    img.onload = () => res(img);
+    img.onerror = rej;
+    img.src = URL.createObjectURL(file);
+  });
+}
 
-def detecteer_namen_pdf(pagina, api_key):
-    print("  🤖 Claude analyseert kaartnamen...")
-    zoom = min(1200 / pagina.rect.width, 1.5)
-    pix  = pagina.get_pixmap(matrix=fitz.Matrix(zoom, zoom), alpha=False)
-    b64  = base64.b64encode(pix.tobytes("jpeg")).decode()
-    return stuur_api_request(b64, "image/jpeg", 9, api_key)
+function bestandNaarBase64(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => res(r.result.split(',')[1]);
+    r.onerror = rej;
+    r.readAsDataURL(file);
+  });
+}
 
-
-def detecteer_namen_jpeg(img_pad, api_key):
-    print("  🤖 Claude analyseert kaartnamen...")
-    with open(img_pad, "rb") as f:
-        b64 = base64.b64encode(f.read()).decode()
-    media_type = "image/jpeg" if img_pad.suffix.lower() in (".jpg", ".jpeg") else "image/png"
-    return stuur_api_request(b64, media_type, 3, api_key)
-
-
-# ── PDF verwerken ─────────────────────────────────────
-
-def verwerk_pdf(pdf_pad, uitvoer_map, marges, api_key=None):
-    doc = fitz.open(pdf_pad)
-    ml, mr, mt, mb, gx, gy = marges
-    uitvoer_map.mkdir(parents=True, exist_ok=True)
-    try:
-        from PIL import Image
-        gebruik_pil = True
-    except ImportError:
-        gebruik_pil = False
-
-    totaal = 0
-    for pagina_nr in range(len(doc)):
-        pagina = doc[pagina_nr]
-        b = pagina.rect.width
-        h = pagina.rect.height
-        cel_b = (b - ml - mr - 2 * gx) / 3
-        cel_h = (h - mt - mb - 2 * gy) / 3
-        zoom  = max(DOEL_DPI / PDF_BASIS_DPI, UITVOER_BREEDTE / cel_b, UITVOER_HOOGTE / cel_h)
-        print(f"\nPagina {pagina_nr+1}/{len(doc)} — zoom {zoom:.2f}× ({zoom * PDF_BASIS_DPI:.0f} DPI)")
-
-        namen = None
-        if api_key:
-            namen = detecteer_namen_pdf(pagina, api_key)
-            if namen:
-                print(f"  Namen: {', '.join(n for n in namen if n)}")
-
-        for rij in range(3):
-            for kolom in range(3):
-                kaart_nr = rij * 3 + kolom + 1
-                x0   = ml + kolom * (cel_b + gx)
-                y0   = mt + rij   * (cel_h + gy)
-                rect = fitz.Rect(x0, y0, x0 + cel_b, y0 + cel_h)
-                pix  = pagina.get_pixmap(matrix=fitz.Matrix(zoom, zoom), clip=rect, alpha=False)
-
-                if namen and namen[kaart_nr - 1]:
-                    veilig = "".join(c if c not in r'/\:*?"<>|' else '_' for c in namen[kaart_nr - 1])
-                    bestand = uitvoer_map / f"{veilig}.{UITVOER_FORMAAT}"
-                else:
-                    bestand = uitvoer_map / f"p{pagina_nr+1}_kaart{kaart_nr:02d}.{UITVOER_FORMAAT}"
-
-                if gebruik_pil and (pix.width != UITVOER_BREEDTE or pix.height != UITVOER_HOOGTE):
-                    img = Image.open(io.BytesIO(pix.tobytes("jpeg")))
-                    img = img.resize((UITVOER_BREEDTE, UITVOER_HOOGTE), Image.LANCZOS)
-                    if UITVOER_FORMAAT == "png":
-                        img.save(str(bestand), "PNG")
-                    else:
-                        img.save(str(bestand), "JPEG", quality=JPEG_KWALITEIT, subsampling=0)
-                else:
-                    pix.save(str(bestand))
-
-                kb = bestand.stat().st_size // 1024
-                print(f"  ✓ Kaart {kaart_nr}/9 → {bestand.name} ({kb} KB)")
-                totaal += 1
-
-    doc.close()
-    print(f"\n✅ Klaar! {totaal} kaarten opgeslagen in: {uitvoer_map}")
-
-
-# ── JPEG legging verwerken ────────────────────────────
-
-def verwerk_jpeg_legging(img_pad, uitvoer_map, format_key, api_key=None):
-    try:
-        from PIL import Image
-    except ImportError:
-        print("❌ Pillow niet gevonden — installeer met: pip3 install Pillow")
-        return
-
-    img = Image.open(img_pad).convert("RGB")
-    W, H = img.size
-    schaal = W / FORMATS[format_key]["breedte"]
-    print(f"\nAfbeelding: {img_pad.name} — {W}×{H} px — schaal: {schaal:.3f}×")
-    uitvoer_map.mkdir(parents=True, exist_ok=True)
-
-    kaart_namen = [r["naam"] for r in FORMATS[format_key]["kaarten"]]
-    if api_key:
-        herkend = detecteer_namen_jpeg(img_pad, api_key)
-        if herkend:
-            print(f"  Namen: {', '.join(herkend)}")
-            kaart_namen = herkend
-
-    for i, kaart in enumerate(FORMATS[format_key]["kaarten"]):
-        x0 = round(kaart["rect"][0] * schaal)
-        y0 = round(kaart["rect"][1] * schaal)
-        x1 = round(kaart["rect"][2] * schaal)
-        y1 = round(kaart["rect"][3] * schaal)
-
-        gesneden  = img.crop((x0, y0, x1, y1))
-        geschaald = gesneden.resize((UITVOER_BREEDTE, UITVOER_HOOGTE), Image.LANCZOS)
-
-        naam   = kaart_namen[i] if i < len(kaart_namen) else kaart["naam"]
-        veilig = "".join(c if c not in r'/\:*?"<>|' else '_' for c in naam)
-        bestand = uitvoer_map / f"{veilig}.{UITVOER_FORMAAT}"
-
-        if UITVOER_FORMAAT == "png":
-            geschaald.save(str(bestand), "PNG")
-        else:
-            geschaald.save(str(bestand), "JPEG", quality=JPEG_KWALITEIT, subsampling=0)
-
-        kb = bestand.stat().st_size // 1024
-        print(f"  ✓ {naam} → {bestand.name} ({kb} KB)")
-
-    print(f"\n✅ Klaar! 3 kaarten opgeslagen in: {uitvoer_map}")
-
-
-# ── Main ──────────────────────────────────────────────
-
-def main():
-    huidige_map = Path.cwd()
-
-    pdfs  = sorted(huidige_map.glob("*.pdf"))
-    jpegs = sorted(
-        list(huidige_map.glob("*.jpg")) +
-        list(huidige_map.glob("*.jpeg")) +
-        list(huidige_map.glob("*.JPG")) +
-        list(huidige_map.glob("*.JPEG"))
-    )
-    bestanden = pdfs + jpegs
-
-    if not bestanden:
-        print(f"Geen bestanden gevonden in: {huidige_map}")
-        sys.exit(1)
-
-    if len(bestanden) == 1:
-        bestand = bestanden[0]
-    else:
-        print("Bestanden gevonden:")
-        for i, f in enumerate(bestanden):
-            soort = "PDF" if f.suffix.lower() == ".pdf" else "JPEG"
-            print(f"  {i+1}. [{soort}] {f.name}")
-        bestand = bestanden[int(input("Welk nummer? ").strip()) - 1]
-
-    # API key
-    api_key = laad_api_key()
-    if not api_key:
-        keuze = input("\n🤖 Wil je kaartnamen automatisch herkennen via AI? (j/n): ").strip().lower()
-        if keuze == 'j':
-            api_key = input("  Plak je Anthropic API key (sk-ant-...): ").strip()
-            if api_key:
-                sla_api_key_op(api_key)
-    else:
-        keuze = input("\n🤖 AI naamherkenning gebruiken? (j/n): ").strip().lower()
-        if keuze == 'n':
-            api_key = None
-
-    uitvoer_map = huidige_map / f"kaarten_{bestand.stem}"
-
-    if bestand.suffix.lower() == ".pdf":
-        print(f"\nGeladen: {bestand.name} (PDF)")
-        doc    = fitz.open(bestand)
-        marges = laad_config()
-        marges = vraag_marges(doc[0], bestand, marges)
-        doc.close()
-        verwerk_pdf(bestand, uitvoer_map, marges, api_key)
-    else:
-        # Detecteer format op naam, anders vragen
-        format_key = next((k for k in FORMATS if k in bestand.name), None)
-        if not format_key:
-            print(f"\nWelk format is '{bestand.name}'?")
-            for i, k in enumerate(FORMATS.keys()):
-                print(f"  {i+1}. {k}")
-            keuze = int(input("Keuze: ").strip()) - 1
-            format_key = list(FORMATS.keys())[keuze]
-        verwerk_jpeg_legging(bestand, uitvoer_map, format_key, api_key)
-
-    input("\nDruk op Enter om af te sluiten...")
-
-
-if __name__ == "__main__":
-    main()
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+</script>
+</body>
+</html>
