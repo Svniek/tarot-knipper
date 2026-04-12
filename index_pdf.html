@@ -59,10 +59,13 @@ input[type=range] { width: 100%; accent-color: #c9a84c; }
 .progress { height: 4px; background: #0f3460; border-radius: 2px; margin-top: 10px; display: none; }
 .progress-bar { height: 100%; background: #c9a84c; width: 0%; border-radius: 2px; transition: width 0.2s; }
 
-.actie-knoppen { display: none; margin-top: 14px; display: none; gap: 10px; }
-.actie-knoppen button { flex: 1; padding: 12px; border: none; border-radius: 10px; font-size: 0.88rem; font-weight: bold; cursor: pointer; }
-#knip-btn { background: #c9a84c; color: #1a1a2e; }
-#deel-alles { background: #27ae60; color: #fff; }
+.actie-knoppen { display: none; margin-top: 14px; flex-wrap: wrap; gap: 10px; }
+.actie-knoppen button { flex: 1; min-width: 120px; padding: 12px; border: none; border-radius: 10px; font-size: 0.88rem; font-weight: bold; cursor: pointer; }
+#naam-btn  { background: #7d3c98; color: #fff; }
+#knip-btn  { background: #c9a84c; color: #1a1a2e; }
+#deel-alles { background: #27ae60; color: #fff; flex-basis: 100%; }
+#namen-inputs { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; }
+#namen-inputs input { background: #0f3460; border: 1px solid #7d3c98; color: #eee; border-radius: 6px; padding: 4px 6px; font-size: 0.68rem; text-align: center; }
 
 #kaarten-grid { margin-top: 14px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
 .kaart-item { background: #16213e; border-radius: 10px; overflow: hidden; border: 1px solid #0f3460; }
@@ -144,8 +147,13 @@ input[type=range] { width: 100%; accent-color: #c9a84c; }
 
   <!-- Actieknoppen -->
   <div class="actie-knoppen" id="actie-knoppen">
-    <button id="knip-btn">✂️ Kaarten uitsnijden</button>
+    <button id="naam-btn">🤖 Namen detecteren</button>
+    <button id="knip-btn">✂️ Uitsnijden</button>
     <button id="deel-alles" style="display:none;">📤 Alle cutouts delen</button>
+  </div>
+  <div id="naam-resultaat" style="display:none;background:#16213e;border-radius:10px;padding:12px;margin-top:10px;border:1px solid #0f3460;">
+    <div style="font-size:0.72rem;color:#777;margin-bottom:6px;">Herkende namen (aanpasbaar):</div>
+    <div id="namen-inputs"></div>
   </div>
 
   <div id="kaarten-grid"></div>
@@ -301,8 +309,33 @@ function tekenOverlay() {
   }
 }
 
-// Uitsnijden
-document.getElementById('knip-btn').addEventListener('click', async () => {
+let huidigNamen = Array(9).fill('');
+
+// Namen detecteren knop
+document.getElementById('naam-btn').addEventListener('click', async () => {
+  const apiKey = keyInput.value.trim();
+  if (!apiKey) { alert('Vul eerst je API key in'); return; }
+  const namen = await detecteerNamen(apiKey);
+  if (namen) {
+    huidigNamen = namen;
+    toonNamenEditor(namen);
+  }
+});
+
+function toonNamenEditor(namen) {
+  const wrap = document.getElementById('naam-resultaat');
+  const grid = document.getElementById('namen-inputs');
+  grid.innerHTML = '';
+  namen.forEach((naam, i) => {
+    const inp = document.createElement('input');
+    inp.type = 'text';
+    inp.value = naam;
+    inp.placeholder = `Kaart ${i+1}`;
+    inp.addEventListener('input', () => { huidigNamen[i] = inp.value; });
+    grid.appendChild(inp);
+  });
+  wrap.style.display = 'block';
+}
   if (!pageCanvas) return;
   uitvoerItems = [];
   document.getElementById('kaarten-grid').innerHTML = '';
@@ -325,7 +358,7 @@ document.getElementById('knip-btn').addEventListener('click', async () => {
   const celH = (PH - mt - mb - 2 * gy) / 3;
 
   // Zoom zodat elke cel minstens uitvoerresolutie heeft, max 6× voor geheugen
-  const zoom = Math.min(6, Math.max(UIT_B / celB, UIT_H / celH));
+  const zoom = Math.min(12, Math.max(UIT_B / celB, UIT_H / celH));
 
   const prog = document.getElementById('prog');
   prog.style.display = 'block';
@@ -339,7 +372,7 @@ document.getElementById('knip-btn').addEventListener('click', async () => {
       const y0 = mt + r * (celH + gy);
       const rect = [x0, y0, x0 + celB, y0 + celH];
 
-      // Render alleen deze cel op hoge zoom
+      // Render alleen deze cel op hoge zoom via correcte transform matrix
       const vp = page.getViewport({ scale: zoom });
       const celCanvas = document.createElement('canvas');
       celCanvas.width  = Math.round(celB * zoom);
@@ -347,7 +380,7 @@ document.getElementById('knip-btn').addEventListener('click', async () => {
       await page.render({
         canvasContext: celCanvas.getContext('2d'),
         viewport: vp,
-        transform: [-zoom * x0, -zoom * y0]
+        transform: [1, 0, 0, 1, -x0 * zoom, -y0 * zoom]
       }).promise;
 
       const uit = document.createElement('canvas');
@@ -359,7 +392,7 @@ document.getElementById('knip-btn').addEventListener('click', async () => {
       ctx.imageSmoothingQuality = 'high';
       ctx.drawImage(celCanvas, 0, 0, UIT_B, UIT_H);
 
-      const naam = (namen && namen[idx]) ? namen[idx] : `kaart_${idx + 1}`;
+      const naam = huidigNamen[idx] || `kaart_${idx + 1}`;
       uitvoerItems.push({ canvas: uit, naam });
       toonKaart(uit, naam);
 
