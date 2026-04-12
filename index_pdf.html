@@ -316,24 +316,10 @@ document.getElementById('knip-btn').addEventListener('click', async () => {
   }
 
   const { ml, mr, mt, mb, gx, gy } = getMarges();
-  const sc = 2;
+  const previewSc = 2; // preview is gerenderd op 2×
   const W = pageCanvas.width, H = pageCanvas.height;
-  const cw = (W - (ml + mr) * sc - 2 * gx * sc) / 3;
-  const ch = (H - (mt + mb) * sc - 2 * gy * sc) / 3;
-
-  // Zoom voor hoge kwaliteit
-  const page = await pdfDoc.getPage(huidigePagina);
-  const basisVp = page.getViewport({ scale: 1 });
-  const celB = (basisVp.width  - ml - mr - 2 * gx) / 3;
-  const celH = (basisVp.height - mt - mb - 2 * gy) / 3;
-  const zoom = Math.max(300 / 72, UIT_B / celB, UIT_H / celH);
-  const highVp = page.getViewport({ scale: zoom });
-  const highCanvas = document.createElement('canvas');
-  highCanvas.width = highVp.width; highCanvas.height = highVp.height;
-  await page.render({ canvasContext: highCanvas.getContext('2d'), viewport: highVp }).promise;
-
-  const hcw = (highCanvas.width  - (ml + mr) * zoom - 2 * gx * zoom) / 3;
-  const hch = (highCanvas.height - (mt + mb) * zoom - 2 * gy * zoom) / 3;
+  const cw = (W - (ml + mr) * previewSc - 2 * gx * previewSc) / 3;
+  const ch = (H - (mt + mb) * previewSc - 2 * gy * previewSc) / 3;
 
   const prog = document.getElementById('prog');
   prog.style.display = 'block';
@@ -341,12 +327,12 @@ document.getElementById('knip-btn').addEventListener('click', async () => {
   for (let r = 0; r < 3; r++) {
     for (let c = 0; c < 3; c++) {
       const idx = r * 3 + c;
-      const sx = ml * zoom + c * (hcw + gx * zoom);
-      const sy = mt * zoom + r * (hch + gy * zoom);
+      const sx = ml * previewSc + c * (cw + gx * previewSc);
+      const sy = mt * previewSc + r * (ch + gy * previewSc);
 
       const tmp = document.createElement('canvas');
-      tmp.width = Math.round(hcw); tmp.height = Math.round(hch);
-      tmp.getContext('2d').drawImage(highCanvas, sx, sy, hcw, hch, 0, 0, tmp.width, tmp.height);
+      tmp.width = Math.round(cw); tmp.height = Math.round(ch);
+      tmp.getContext('2d').drawImage(pageCanvas, sx, sy, cw, ch, 0, 0, tmp.width, tmp.height);
 
       const uit = document.createElement('canvas');
       uit.width = UIT_B; uit.height = UIT_H;
