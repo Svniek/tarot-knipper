@@ -316,10 +316,16 @@ document.getElementById('knip-btn').addEventListener('click', async () => {
   }
 
   const { ml, mr, mt, mb, gx, gy } = getMarges();
-  const previewSc = 2; // preview is gerenderd op 2×
-  const W = pageCanvas.width, H = pageCanvas.height;
-  const cw = (W - (ml + mr) * previewSc - 2 * gx * previewSc) / 3;
-  const ch = (H - (mt + mb) * previewSc - 2 * gy * previewSc) / 3;
+
+  // Bereken celafmetingen op basis van PDF punten (scale=1)
+  const page = await pdfDoc.getPage(huidigePagina);
+  const basisVp = page.getViewport({ scale: 1 });
+  const PW = basisVp.width, PH = basisVp.height;
+  const celB = (PW - ml - mr - 2 * gx) / 3;
+  const celH = (PH - mt - mb - 2 * gy) / 3;
+
+  // Zoom zodat elke cel minstens uitvoerresolutie heeft, max 6× voor geheugen
+  const zoom = Math.min(6, Math.max(UIT_B / celB, UIT_H / celH));
 
   const prog = document.getElementById('prog');
   prog.style.display = 'block';
@@ -327,12 +333,22 @@ document.getElementById('knip-btn').addEventListener('click', async () => {
   for (let r = 0; r < 3; r++) {
     for (let c = 0; c < 3; c++) {
       const idx = r * 3 + c;
-      const sx = ml * previewSc + c * (cw + gx * previewSc);
-      const sy = mt * previewSc + r * (ch + gy * previewSc);
 
-      const tmp = document.createElement('canvas');
-      tmp.width = Math.round(cw); tmp.height = Math.round(ch);
-      tmp.getContext('2d').drawImage(pageCanvas, sx, sy, cw, ch, 0, 0, tmp.width, tmp.height);
+      // Snijrechthoek in PDF punten
+      const x0 = ml + c * (celB + gx);
+      const y0 = mt + r * (celH + gy);
+      const rect = [x0, y0, x0 + celB, y0 + celH];
+
+      // Render alleen deze cel op hoge zoom
+      const vp = page.getViewport({ scale: zoom });
+      const celCanvas = document.createElement('canvas');
+      celCanvas.width  = Math.round(celB * zoom);
+      celCanvas.height = Math.round(celH * zoom);
+      await page.render({
+        canvasContext: celCanvas.getContext('2d'),
+        viewport: vp,
+        transform: [-zoom * x0, -zoom * y0]
+      }).promise;
 
       const uit = document.createElement('canvas');
       uit.width = UIT_B; uit.height = UIT_H;
@@ -341,7 +357,7 @@ document.getElementById('knip-btn').addEventListener('click', async () => {
       ctx.fillRect(0, 0, UIT_B, UIT_H);
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = 'high';
-      ctx.drawImage(tmp, 0, 0, UIT_B, UIT_H);
+      ctx.drawImage(celCanvas, 0, 0, UIT_B, UIT_H);
 
       const naam = (namen && namen[idx]) ? namen[idx] : `kaart_${idx + 1}`;
       uitvoerItems.push({ canvas: uit, naam });
@@ -433,7 +449,7 @@ document.getElementById('deel-alles').addEventListener('click', async () => {
 // AI naamherkenning
 async function detecteerNamen(apiKey) {
   try {
-    const sc = 1;
+    setStatus('🤖 Pagina renderen voor AI...', '#9b59b6');
     const page = await pdfDoc.getPage(huidigePagina);
     const vp = page.getViewport({ scale: 1.5 });
     const tmp = document.createElement('canvas');
@@ -441,6 +457,7 @@ async function detecteerNamen(apiKey) {
     await page.render({ canvasContext: tmp.getContext('2d'), viewport: vp }).promise;
     const b64 = tmp.toDataURL('image/jpeg', 0.85).split(',')[1];
 
+    setStatus('🤖 Claude analyseert namen...', '#9b59b6');
     const resp = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -462,14 +479,19 @@ async function detecteerNamen(apiKey) {
       })
     });
 
-    if (!resp.ok) throw new Error(await resp.text());
     const data = await resp.json();
+    if (!resp.ok) {
+      const fout = data.error?.message || resp.status;
+      setStatus('❌ API fout: ' + fout, '#e74c3c');
+      return null;
+    }
+
     const namen = data.content[0].text.trim().split('\n').map(s => s.trim()).filter(Boolean).slice(0, 9);
     while (namen.length < 9) namen.push('');
-    setStatus('Namen: ' + namen.filter(Boolean).join(', '), '#27ae60');
+    setStatus('✅ Namen: ' + namen.filter(Boolean).join(', '), '#27ae60');
     return namen;
   } catch(e) {
-    setStatus('Naamherkenning mislukt, doorgaan...', '#e74c3c');
+    setStatus('❌ Naamherkenning fout: ' + e.message, '#e74c3c');
     return null;
   }
 }
