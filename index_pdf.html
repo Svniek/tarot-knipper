@@ -86,12 +86,12 @@ input[type=range] { width: 100%; accent-color: #c9a84c; }
 
   <label class="upload" for="pdf-input">
     <span class="icoon">📄</span>
-    <span class="tekst">
+    <span class="tekst" id="upload-tekst">
       Tik hier om een PDF te kiezen
       <strong>3×3 grid met 9 tarotkaarten</strong>
     </span>
   </label>
-  <input type="file" id="pdf-input" accept=".pdf" style="display:none;">
+  <input type="file" id="pdf-input" accept=".pdf" style="position:fixed;top:-100px;left:-100px;width:1px;height:1px;opacity:0;">
 
   <div class="veld">
     <label>Anthropic API key (voor naamherkenning)</label>
@@ -219,27 +219,45 @@ function getMarges() {
 laadMarges();
 
 // PDF laden
-document.getElementById('pdf-input').addEventListener('change', async function() {
-  if (!this.files || !this.files[0]) return;
-  const file = this.files[0];
-  setStatus('PDF laden...', '#888');
+const pdfInput = document.getElementById('pdf-input');
 
-  try {
-    const buf = await file.arrayBuffer();
-    pdfDoc = await pdfjsLib.getDocument({ data: buf }).promise;
-    totaalPaginas = pdfDoc.numPages;
-    huidigePagina = 1;
-    uitvoerItems = [];
-    document.getElementById('kaarten-grid').innerHTML = '';
-    document.getElementById('deel-alles').style.display = 'none';
-    document.getElementById('pagina-nav').style.display = totaalPaginas > 1 ? 'block' : 'none';
-    document.getElementById('marges-panel').style.display = 'block';
-    document.getElementById('actie-knoppen').style.display = 'flex';
-    await renderPagina(1);
-  } catch(e) {
-    setStatus('❌ PDF laden mislukt: ' + e.message, '#e74c3c');
+pdfInput.addEventListener('change', function(e) {
+  const file = e.target.files && e.target.files[0];
+  if (!file) {
+    setStatus('Geen bestand geselecteerd', '#e74c3c');
+    return;
   }
+  document.getElementById('upload-tekst').innerHTML = `<strong style="color:#c9a84c">${file.name}</strong><br><span style="font-size:0.75rem">${(file.size/1024).toFixed(0)} KB</span>`;
+  setStatus('PDF inlezen...', '#888');
+  laadPDF(file);
 });
+
+function laadPDF(file) {
+  const reader = new FileReader();
+  reader.onload = async function(e) {
+    try {
+      const data = new Uint8Array(e.target.result);
+      pdfDoc = await pdfjsLib.getDocument({ data }).promise;
+      totaalPaginas = pdfDoc.numPages;
+      huidigePagina = 1;
+      uitvoerItems = [];
+      huidigNamen = Array(9).fill('');
+      document.getElementById('kaarten-grid').innerHTML = '';
+      document.getElementById('deel-alles').style.display = 'none';
+      document.getElementById('naam-resultaat').style.display = 'none';
+      document.getElementById('pagina-nav').style.display = totaalPaginas > 1 ? 'block' : 'none';
+      document.getElementById('marges-panel').style.display = 'block';
+      document.getElementById('actie-knoppen').style.display = 'flex';
+      await renderPagina(1);
+    } catch(err) {
+      setStatus('❌ PDF fout: ' + err.message, '#e74c3c');
+    }
+  };
+  reader.onerror = function() {
+    setStatus('❌ Bestand lezen mislukt', '#e74c3c');
+  };
+  reader.readAsArrayBuffer(file);
+}
 
 // Pagina navigatie
 document.getElementById('prev-btn').addEventListener('click', async () => {
