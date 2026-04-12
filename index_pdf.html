@@ -161,7 +161,8 @@ input[type=range] { width: 100%; accent-color: #c9a84c; }
 </div>
 
 <script>
-pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+// Schakel worker uit voor iOS compatibiliteit
+pdfjsLib.GlobalWorkerOptions.workerSrc = '';
 
 const UIT_B = 2160, UIT_H = 3840;
 let pdfDoc = null, huidigePagina = 1, totaalPaginas = 1;
@@ -227,8 +228,8 @@ pdfInput.addEventListener('change', function(e) {
     setStatus('Geen bestand geselecteerd', '#e74c3c');
     return;
   }
+  setStatus(`📄 Bestand: ${file.name} (${(file.size/1024).toFixed(0)} KB) — inlezen...`, '#c9a84c');
   document.getElementById('upload-tekst').innerHTML = `<strong style="color:#c9a84c">${file.name}</strong><br><span style="font-size:0.75rem">${(file.size/1024).toFixed(0)} KB</span>`;
-  setStatus('PDF inlezen...', '#888');
   laadPDF(file);
 });
 
