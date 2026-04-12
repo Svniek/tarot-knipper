@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<title>Tarot Deck Knipper</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, sans-serif; background: #1a1a2e; color: #eee; padding-bottom: 40px; }
+header { background: #16213e; border-bottom: 1px solid #0f3460; padding: 16px 20px; text-align: center; }
+header h1 { font-size: 1.2rem; color: #c9a84c; }
+header p  { font-size: 0.72rem; color: #555; margin-top: 2px; }
+.sectie { padding: 16px; }
+
+label.upload {
+  display: block;
+  border: 2px dashed #c9a84c55;
+  border-radius: 14px;
+  padding: 36px 20px;
+  text-align: center;
+  background: #16213e;
+  cursor: pointer;
+}
+label.upload .icoon { font-size: 3rem; display: block; margin-bottom: 10px; }
+label.upload .tekst { color: #aaa; font-size: 0.9rem; line-height: 1.6; }
+label.upload .tekst strong { color: #c9a84c; display: block; margin-top: 6px; }
+#pdf-input { display: none; }
+
+.veld { background: #16213e; border-radius: 14px; padding: 14px 16px; margin-top: 14px; border: 1px solid #0f3460; }
+.veld label { font-size: 0.75rem; color: #777; display: block; margin-bottom: 6px; }
+.veld input { width: 100%; background: #0f3460; border: 1px solid #1a4a8a; color: #eee; border-radius: 8px; padding: 10px 12px; font-size: 0.78rem; font-family: monospace; }
+
+/* Pagina navigator */
+#pagina-nav { display: none; background: #16213e; border-radius: 14px; padding: 12px 16px; margin-top: 14px; border: 1px solid #0f3460; }
+#pagina-nav .nav-rij { display: flex; align-items: center; gap: 10px; }
+#pagina-nav button { background: #0f3460; border: 1px solid #1a4a8a; color: #eee; border-radius: 8px; padding: 8px 16px; font-size: 0.85rem; cursor: pointer; flex-shrink: 0; }
+#pagina-nav button:disabled { opacity: 0.3; }
+#pagina-info { flex: 1; text-align: center; font-size: 0.82rem; color: #c9a84c; font-weight: bold; }
+
+/* Marges */
+#marges-panel { display: none; background: #16213e; border-radius: 14px; padding: 14px 16px; margin-top: 14px; border: 1px solid #0f3460; }
+#marges-panel .panel-titel { font-size: 0.78rem; color: #c9a84c; font-weight: bold; margin-bottom: 10px; }
+.slider-rij { margin-bottom: 8px; }
+.slider-rij .lbl { display: flex; justify-content: space-between; font-size: 0.72rem; color: #bbb; margin-bottom: 2px; }
+.slider-rij .lbl span { color: #c9a84c; font-weight: bold; }
+input[type=range] { width: 100%; accent-color: #c9a84c; }
+
+/* Preview */
+#preview-wrap { display: none; margin-top: 14px; position: relative; }
+#preview-canvas { width: 100%; border-radius: 10px; display: block; }
+#overlay-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 10px; pointer-events: none; }
+
+#status { background: #16213e; border-radius: 10px; padding: 12px 16px; margin-top: 14px; font-size: 0.82rem; color: #888; text-align: center; border: 1px solid #0f3460; min-height: 44px; }
+
+.progress { height: 4px; background: #0f3460; border-radius: 2px; margin-top: 10px; display: none; }
+.progress-bar { height: 100%; background: #c9a84c; width: 0%; border-radius: 2px; transition: width 0.2s; }
+
+.actie-knoppen { display: none; margin-top: 14px; display: none; gap: 10px; }
+.actie-knoppen button { flex: 1; padding: 12px; border: none; border-radius: 10px; font-size: 0.88rem; font-weight: bold; cursor: pointer; }
+#knip-btn { background: #c9a84c; color: #1a1a2e; }
+#deel-alles { background: #27ae60; color: #fff; }
+
+#kaarten-grid { margin-top: 14px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+.kaart-item { background: #16213e; border-radius: 10px; overflow: hidden; border: 1px solid #0f3460; }
+.kaart-item canvas { width: 100%; display: block; }
+.kaart-footer { padding: 6px 8px; display: flex; align-items: center; gap: 4px; }
+.kaart-naam { font-size: 0.62rem; color: #c9a84c; font-weight: bold; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.deel-knop { background: #c9a84c; color: #1a1a2e; border: none; border-radius: 6px; padding: 5px 8px; font-size: 0.7rem; font-weight: bold; cursor: pointer; white-space: nowrap; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🃏 Tarot Deck Knipper</h1>
+  <p>PDF → 9 kaarten · Samsung Frame TV · 2160×3840</p>
+</header>
+
+<div class="sectie">
+
+  <label class="upload" for="pdf-input">
+    <span class="icoon">📄</span>
+    <span class="tekst">
+      Tik hier om een PDF te kiezen
+      <strong>3×3 grid met 9 tarotkaarten</strong>
+    </span>
+  </label>
+  <input type="file" id="pdf-input" accept="application/pdf,.pdf">
+
+  <div class="veld">
+    <label>Anthropic API key (voor naamherkenning)</label>
+    <input type="password" id="api-key" placeholder="sk-ant-...">
+  </div>
+
+  <!-- Pagina navigatie -->
+  <div id="pagina-nav">
+    <div class="nav-rij">
+      <button id="prev-btn" disabled>◀</button>
+      <span id="pagina-info">Pagina 1 / 1</span>
+      <button id="next-btn" disabled>▶</button>
+    </div>
+  </div>
+
+  <!-- Marges -->
+  <div id="marges-panel">
+    <div class="panel-titel">⚙️ Snijlijnen aanpassen</div>
+    <div class="slider-rij">
+      <div class="lbl">Marge links <span id="v-ml">60</span></div>
+      <input type="range" id="s-ml" min="0" max="200" value="60">
+    </div>
+    <div class="slider-rij">
+      <div class="lbl">Marge rechts <span id="v-mr">60</span></div>
+      <input type="range" id="s-mr" min="0" max="200" value="60">
+    </div>
+    <div class="slider-rij">
+      <div class="lbl">Marge boven <span id="v-mt">13</span></div>
+      <input type="range" id="s-mt" min="0" max="200" value="13">
+    </div>
+    <div class="slider-rij">
+      <div class="lbl">Marge onder <span id="v-mb">14</span></div>
+      <input type="range" id="s-mb" min="0" max="200" value="14">
+    </div>
+    <div class="slider-rij">
+      <div class="lbl">Tussenruimte X <span id="v-gx">0</span></div>
+      <input type="range" id="s-gx" min="0" max="100" value="0">
+    </div>
+    <div class="slider-rij">
+      <div class="lbl">Tussenruimte Y <span id="v-gy">0</span></div>
+      <input type="range" id="s-gy" min="0" max="100" value="0">
+    </div>
+  </div>
+
+  <!-- Preview -->
+  <div id="preview-wrap">
+    <canvas id="preview-canvas"></canvas>
+    <canvas id="overlay-canvas"></canvas>
+  </div>
+
+  <div id="status">Kies een PDF om te beginnen</div>
+  <div class="progress" id="prog"><div class="progress-bar" id="pb"></div></div>
+
+  <!-- Actieknoppen -->
+  <div class="actie-knoppen" id="actie-knoppen">
+    <button id="knip-btn">✂️ Kaarten uitsnijden</button>
+    <button id="deel-alles" style="display:none;">📤 Alle cutouts delen</button>
+  </div>
+
+  <div id="kaarten-grid"></div>
+
+</div>
+
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+const UIT_B = 2160, UIT_H = 3840;
+let pdfDoc = null, huidigePagina = 1, totaalPaginas = 1;
+let pageCanvas = null;
+let uitvoerItems = [];
+
+// API key
+const keyInput = document.getElementById('api-key');
+try { const k = localStorage.getItem('tarot_api_key'); if (k) keyInput.value = k; } catch(e) {}
+keyInput.addEventListener('input', () => {
+  try { localStorage.setItem('tarot_api_key', keyInput.value.trim()); } catch(e) {}
+});
+
+// Marges laden/opslaan
+function laadMarges() {
+  try {
+    const m = JSON.parse(localStorage.getItem('tarot_marges') || '{}');
+    if (m.ml !== undefined) {
+      ['ml','mr','mt','mb','gx','gy'].forEach(k => {
+        if (m[k] !== undefined) {
+          document.getElementById('s-'+k).value = m[k];
+          document.getElementById('v-'+k).textContent = m[k];
+        }
+      });
+    }
+  } catch(e) {}
+}
+
+function slaMargesOp() {
+  const m = {};
+  ['ml','mr','mt','mb','gx','gy'].forEach(k => m[k] = +document.getElementById('s-'+k).value);
+  try { localStorage.setItem('tarot_marges', JSON.stringify(m)); } catch(e) {}
+}
+
+function getMarges() {
+  return {
+    ml: +document.getElementById('s-ml').value,
+    mr: +document.getElementById('s-mr').value,
+    mt: +document.getElementById('s-mt').value,
+    mb: +document.getElementById('s-mb').value,
+    gx: +document.getElementById('s-gx').value,
+    gy: +document.getElementById('s-gy').value,
+  };
+}
+
+// Sliders
+['ml','mr','mt','mb','gx','gy'].forEach(id => {
+  document.getElementById('s-'+id).addEventListener('input', () => {
+    document.getElementById('v-'+id).textContent = document.getElementById('s-'+id).value;
+    tekenOverlay();
+    slaMargesOp();
+  });
+});
+
+laadMarges();
+
+// PDF laden
+document.getElementById('pdf-input').addEventListener('change', async function() {
+  if (!this.files || !this.files[0]) return;
+  const file = this.files[0];
+  setStatus('PDF laden...', '#888');
+
+  try {
+    const buf = await file.arrayBuffer();
+    pdfDoc = await pdfjsLib.getDocument({ data: buf }).promise;
+    totaalPaginas = pdfDoc.numPages;
+    huidigePagina = 1;
+    uitvoerItems = [];
+    document.getElementById('kaarten-grid').innerHTML = '';
+    document.getElementById('deel-alles').style.display = 'none';
+    document.getElementById('pagina-nav').style.display = totaalPaginas > 1 ? 'block' : 'none';
+    document.getElementById('marges-panel').style.display = 'block';
+    document.getElementById('actie-knoppen').style.display = 'flex';
+    await renderPagina(1);
+  } catch(e) {
+    setStatus('❌ PDF laden mislukt: ' + e.message, '#e74c3c');
+  }
+});
+
+// Pagina navigatie
+document.getElementById('prev-btn').addEventListener('click', async () => {
+  if (huidigePagina > 1) await renderPagina(--huidigePagina);
+});
+document.getElementById('next-btn').addEventListener('click', async () => {
+  if (huidigePagina < totaalPaginas) await renderPagina(++huidigePagina);
+});
+
+async function renderPagina(nr) {
+  setStatus(`Pagina ${nr} laden...`, '#888');
+  const page = await pdfDoc.getPage(nr);
+  const sc = 2;
+  const vp = page.getViewport({ scale: sc });
+  pageCanvas = document.createElement('canvas');
+  pageCanvas.width = vp.width;
+  pageCanvas.height = vp.height;
+  await page.render({ canvasContext: pageCanvas.getContext('2d'), viewport: vp }).promise;
+
+  const pc = document.getElementById('preview-canvas');
+  pc.width = vp.width; pc.height = vp.height;
+  pc.getContext('2d').drawImage(pageCanvas, 0, 0);
+
+  const oc = document.getElementById('overlay-canvas');
+  oc.width = vp.width; oc.height = vp.height;
+
+  document.getElementById('preview-wrap').style.display = 'block';
+  document.getElementById('pagina-info').textContent = `Pagina ${nr} / ${totaalPaginas}`;
+  document.getElementById('prev-btn').disabled = nr <= 1;
+  document.getElementById('next-btn').disabled = nr >= totaalPaginas;
+
+  tekenOverlay();
+  setStatus(`Pagina ${nr}/${totaalPaginas} geladen — stel snijlijnen in`, '#c9a84c');
+}
+
+function tekenOverlay() {
+  if (!pageCanvas) return;
+  const oc = document.getElementById('overlay-canvas');
+  oc.width = pageCanvas.width;
+  oc.height = pageCanvas.height;
+  const ctx = oc.getContext('2d');
+  const sc = 2;
+  const { ml, mr, mt, mb, gx, gy } = getMarges();
+  const W = pageCanvas.width, H = pageCanvas.height;
+  const cw = (W - (ml + mr) * sc - 2 * gx * sc) / 3;
+  const ch = (H - (mt + mb) * sc - 2 * gy * sc) / 3;
+
+  ctx.fillStyle = 'rgba(0,0,0,0.5)';
+  ctx.fillRect(0, 0, W, H);
+
+  for (let r = 0; r < 3; r++) {
+    for (let c = 0; c < 3; c++) {
+      const x = ml * sc + c * (cw + gx * sc);
+      const y = mt * sc + r * (ch + gy * sc);
+      ctx.clearRect(x, y, cw, ch);
+    }
+  }
+
+  ctx.strokeStyle = '#ff4444';
+  ctx.lineWidth = 2;
+  for (let r = 0; r < 3; r++) {
+    for (let c = 0; c < 3; c++) {
+      const x = ml * sc + c * (cw + gx * sc);
+      const y = mt * sc + r * (ch + gy * sc);
+      ctx.strokeRect(x, y, cw, ch);
+    }
+  }
+}
+
+// Uitsnijden
+document.getElementById('knip-btn').addEventListener('click', async () => {
+  if (!pageCanvas) return;
+  uitvoerItems = [];
+  document.getElementById('kaarten-grid').innerHTML = '';
+  document.getElementById('deel-alles').style.display = 'none';
+
+  const apiKey = keyInput.value.trim();
+  let namen = null;
+  if (apiKey) {
+    setStatus('🤖 Claude herkent namen...', '#9b59b6');
+    namen = await detecteerNamen(apiKey);
+  }
+
+  const { ml, mr, mt, mb, gx, gy } = getMarges();
+  const sc = 2;
+  const W = pageCanvas.width, H = pageCanvas.height;
+  const cw = (W - (ml + mr) * sc - 2 * gx * sc) / 3;
+  const ch = (H - (mt + mb) * sc - 2 * gy * sc) / 3;
+
+  // Zoom voor hoge kwaliteit
+  const page = await pdfDoc.getPage(huidigePagina);
+  const basisVp = page.getViewport({ scale: 1 });
+  const celB = (basisVp.width  - ml - mr - 2 * gx) / 3;
+  const celH = (basisVp.height - mt - mb - 2 * gy) / 3;
+  const zoom = Math.max(300 / 72, UIT_B / celB, UIT_H / celH);
+  const highVp = page.getViewport({ scale: zoom });
+  const highCanvas = document.createElement('canvas');
+  highCanvas.width = highVp.width; highCanvas.height = highVp.height;
+  await page.render({ canvasContext: highCanvas.getContext('2d'), viewport: highVp }).promise;
+
+  const hcw = (highCanvas.width  - (ml + mr) * zoom - 2 * gx * zoom) / 3;
+  const hch = (highCanvas.height - (mt + mb) * zoom - 2 * gy * zoom) / 3;
+
+  const prog = document.getElementById('prog');
+  prog.style.display = 'block';
+
+  for (let r = 0; r < 3; r++) {
+    for (let c = 0; c < 3; c++) {
+      const idx = r * 3 + c;
+      const sx = ml * zoom + c * (hcw + gx * zoom);
+      const sy = mt * zoom + r * (hch + gy * zoom);
+
+      const tmp = document.createElement('canvas');
+      tmp.width = Math.round(hcw); tmp.height = Math.round(hch);
+      tmp.getContext('2d').drawImage(highCanvas, sx, sy, hcw, hch, 0, 0, tmp.width, tmp.height);
+
+      const uit = document.createElement('canvas');
+      uit.width = UIT_B; uit.height = UIT_H;
+      const ctx = uit.getContext('2d');
+      ctx.fillStyle = '#000';
+      ctx.fillRect(0, 0, UIT_B, UIT_H);
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(tmp, 0, 0, UIT_B, UIT_H);
+
+      const naam = (namen && namen[idx]) ? namen[idx] : `kaart_${idx + 1}`;
+      uitvoerItems.push({ canvas: uit, naam });
+      toonKaart(uit, naam);
+
+      document.getElementById('pb').style.width = ((idx + 1) / 9 * 100) + '%';
+      setStatus(`Kaart ${idx + 1}/9 verwerkt...`, '#888');
+      await sleep(20);
+    }
+  }
+
+  prog.style.display = 'none';
+  setStatus('✅ 9 kaarten klaar!', '#27ae60');
+  document.getElementById('deel-alles').style.display = 'block';
+});
+
+// Kaart tonen
+function toonKaart(canvas, naam) {
+  const item = document.createElement('div');
+  item.className = 'kaart-item';
+
+  const tw = Math.floor((window.innerWidth - 32 - 16) / 3);
+  const th = Math.round(tw * UIT_H / UIT_B);
+  const thumb = document.createElement('canvas');
+  thumb.width = tw; thumb.height = th;
+  thumb.getContext('2d').drawImage(canvas, 0, 0, tw, th);
+  item.appendChild(thumb);
+
+  const footer = document.createElement('div');
+  footer.className = 'kaart-footer';
+
+  const naamEl = document.createElement('div');
+  naamEl.className = 'kaart-naam';
+  naamEl.textContent = naam;
+  footer.appendChild(naamEl);
+
+  const knop = document.createElement('button');
+  knop.className = 'deel-knop';
+  knop.textContent = '📤';
+  knop.addEventListener('click', () => deelKaart(canvas, naam));
+  footer.appendChild(knop);
+
+  item.appendChild(footer);
+  document.getElementById('kaarten-grid').appendChild(item);
+}
+
+// Deel kaart
+async function deelKaart(canvas, naam) {
+  try {
+    const blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 1.0));
+    const file = new File([blob], naam + '.jpg', { type: 'image/jpeg' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ files: [file], title: naam });
+    } else {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = naam + '.jpg';
+      a.click();
+    }
+  } catch(e) {
+    if (e.name !== 'AbortError') alert('Fout: ' + e.message);
+  }
+}
+
+// Deel alles
+document.getElementById('deel-alles').addEventListener('click', async () => {
+  const files = [];
+  for (const { canvas, naam } of uitvoerItems) {
+    const blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 1.0));
+    files.push(new File([blob], naam + '.jpg', { type: 'image/jpeg' }));
+  }
+  try {
+    if (navigator.canShare && navigator.canShare({ files })) {
+      await navigator.share({ files, title: 'Tarotkaarten' });
+    } else {
+      const zip = new JSZip();
+      for (const f of files) zip.file(f.name, f);
+      const blob = await zip.generateAsync({ type: 'blob' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'tarotkaarten.zip';
+      a.click();
+    }
+  } catch(e) {
+    if (e.name !== 'AbortError') alert('Fout: ' + e.message);
+  }
+});
+
+// AI naamherkenning
+async function detecteerNamen(apiKey) {
+  try {
+    const sc = 1;
+    const page = await pdfDoc.getPage(huidigePagina);
+    const vp = page.getViewport({ scale: 1.5 });
+    const tmp = document.createElement('canvas');
+    tmp.width = vp.width; tmp.height = vp.height;
+    await page.render({ canvasContext: tmp.getContext('2d'), viewport: vp }).promise;
+    const b64 = tmp.toDataURL('image/jpeg', 0.85).split(',')[1];
+
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-opus-4-5',
+        max_tokens: 200,
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: b64 }},
+            { type: 'text', text: 'Dit is een pagina met 9 tarotkaarten in een 3x3 grid. Elke kaart heeft onderaan een naam. Geef ALLEEN de 9 namen terug, van links naar rechts en van boven naar beneden. Één naam per regel, geen nummers, geen extra tekst, geen lege regels.' }
+          ]
+        }]
+      })
+    });
+
+    if (!resp.ok) throw new Error(await resp.text());
+    const data = await resp.json();
+    const namen = data.content[0].text.trim().split('\n').map(s => s.trim()).filter(Boolean).slice(0, 9);
+    while (namen.length < 9) namen.push('');
+    setStatus('Namen: ' + namen.filter(Boolean).join(', '), '#27ae60');
+    return namen;
+  } catch(e) {
+    setStatus('Naamherkenning mislukt, doorgaan...', '#e74c3c');
+    return null;
+  }
+}
+
+function setStatus(t, kleur) {
+  const el = document.getElementById('status');
+  el.textContent = t;
+  el.style.color = kleur || '#888';
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+</script>
+</body>
+</html>
