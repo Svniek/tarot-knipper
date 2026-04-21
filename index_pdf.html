@@ -16,41 +16,38 @@ header h1 { font-size: 1.2rem; color: #c9a84c; }
 header p  { font-size: 0.72rem; color: #555; margin-top: 2px; }
 .sectie { padding: 16px; }
 
-label.upload {
-  display: block;
-  border: 2px dashed #c9a84c55;
-  border-radius: 14px;
-  padding: 36px 20px;
-  text-align: center;
-  background: #16213e;
-  cursor: pointer;
-}
-label.upload .icoon { font-size: 3rem; display: block; margin-bottom: 10px; }
-label.upload .tekst { color: #aaa; font-size: 0.9rem; line-height: 1.6; }
-label.upload .tekst strong { color: #c9a84c; display: block; margin-top: 6px; }
-#pdf-input { display: none; }
+label.upload { display: block; border: 2px dashed #c9a84c55; border-radius: 14px; padding: 30px 20px; text-align: center; background: #16213e; cursor: pointer; }
+label.upload .icoon { font-size: 2.5rem; display: block; margin-bottom: 8px; }
+label.upload .tekst { color: #aaa; font-size: 0.88rem; line-height: 1.6; }
+label.upload .tekst strong { color: #c9a84c; display: block; margin-top: 4px; }
+#pdf-input { position: fixed; top: -200px; left: -200px; width: 1px; height: 1px; opacity: 0; }
 
 .veld { background: #16213e; border-radius: 14px; padding: 14px 16px; margin-top: 14px; border: 1px solid #0f3460; }
 .veld label { font-size: 0.75rem; color: #777; display: block; margin-bottom: 6px; }
 .veld input { width: 100%; background: #0f3460; border: 1px solid #1a4a8a; color: #eee; border-radius: 8px; padding: 10px 12px; font-size: 0.78rem; font-family: monospace; }
 
+/* Modus knoppen */
+.modus-wrap { display: none; margin-top: 14px; display: none; gap: 8px; }
+.modus-knop { flex: 1; padding: 10px; background: #0f3460; border: 1px solid #1a4a8a; color: #aaa; border-radius: 10px; font-size: 0.82rem; cursor: pointer; }
+.modus-knop.actief { background: #c9a84c; color: #1a1a2e; border-color: #c9a84c; font-weight: bold; }
+
 /* Pagina navigator */
-#pagina-nav { display: none; background: #16213e; border-radius: 14px; padding: 12px 16px; margin-top: 14px; border: 1px solid #0f3460; }
-#pagina-nav .nav-rij { display: flex; align-items: center; gap: 10px; }
-#pagina-nav button { background: #0f3460; border: 1px solid #1a4a8a; color: #eee; border-radius: 8px; padding: 8px 16px; font-size: 0.85rem; cursor: pointer; flex-shrink: 0; }
-#pagina-nav button:disabled { opacity: 0.3; }
+.nav-wrap { display: none; background: #16213e; border-radius: 14px; padding: 12px 16px; margin-top: 14px; border: 1px solid #0f3460; }
+.nav-rij { display: flex; align-items: center; gap: 10px; }
+.nav-rij button { background: #0f3460; border: 1px solid #1a4a8a; color: #eee; border-radius: 8px; padding: 8px 16px; font-size: 0.85rem; cursor: pointer; flex-shrink: 0; }
+.nav-rij button:disabled { opacity: 0.3; }
 #pagina-info { flex: 1; text-align: center; font-size: 0.82rem; color: #c9a84c; font-weight: bold; }
 
 /* Marges */
-#marges-panel { display: none; background: #16213e; border-radius: 14px; padding: 14px 16px; margin-top: 14px; border: 1px solid #0f3460; }
-#marges-panel .panel-titel { font-size: 0.78rem; color: #c9a84c; font-weight: bold; margin-bottom: 10px; }
+.marges-panel { display: none; background: #16213e; border-radius: 14px; padding: 14px 16px; margin-top: 14px; border: 1px solid #0f3460; }
+.panel-titel { font-size: 0.78rem; color: #c9a84c; font-weight: bold; margin-bottom: 10px; }
 .slider-rij { margin-bottom: 8px; }
 .slider-rij .lbl { display: flex; justify-content: space-between; font-size: 0.72rem; color: #bbb; margin-bottom: 2px; }
 .slider-rij .lbl span { color: #c9a84c; font-weight: bold; }
 input[type=range] { width: 100%; accent-color: #c9a84c; }
 
 /* Preview */
-#preview-wrap { display: none; margin-top: 14px; position: relative; }
+.preview-wrap { display: none; margin-top: 14px; position: relative; }
 #preview-canvas { width: 100%; border-radius: 10px; display: block; }
 #overlay-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 10px; pointer-events: none; }
 
@@ -60,14 +57,18 @@ input[type=range] { width: 100%; accent-color: #c9a84c; }
 .progress-bar { height: 100%; background: #c9a84c; width: 0%; border-radius: 2px; transition: width 0.2s; }
 
 .actie-knoppen { display: none; margin-top: 14px; flex-wrap: wrap; gap: 10px; }
-.actie-knoppen button { flex: 1; min-width: 120px; padding: 12px; border: none; border-radius: 10px; font-size: 0.88rem; font-weight: bold; cursor: pointer; }
-#naam-btn  { background: #7d3c98; color: #fff; }
-#knip-btn  { background: #c9a84c; color: #1a1a2e; }
-#deel-alles { background: #27ae60; color: #fff; flex-basis: 100%; }
+.actie-knoppen button { flex: 1; min-width: 120px; padding: 12px; border: none; border-radius: 10px; font-size: 0.85rem; font-weight: bold; cursor: pointer; }
+#naam-btn   { background: #7d3c98; color: #fff; }
+#knip-btn   { background: #c9a84c; color: #1a1a2e; }
+#deel-alles { background: #27ae60; color: #fff; flex-basis: 100%; display: none; }
+
+#naam-resultaat { display: none; background: #16213e; border-radius: 10px; padding: 12px; margin-top: 10px; border: 1px solid #0f3460; }
+#naam-resultaat .lbl-klein { font-size: 0.72rem; color: #777; margin-bottom: 6px; }
 #namen-inputs { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; }
 #namen-inputs input { background: #0f3460; border: 1px solid #7d3c98; color: #eee; border-radius: 6px; padding: 4px 6px; font-size: 0.68rem; text-align: center; }
 
 #kaarten-grid { margin-top: 14px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+#kaarten-grid.enkel { grid-template-columns: 1fr; max-width: 300px; margin-left: auto; margin-right: auto; }
 .kaart-item { background: #16213e; border-radius: 10px; overflow: hidden; border: 1px solid #0f3460; }
 .kaart-item canvas { width: 100%; display: block; }
 .kaart-footer { padding: 6px 8px; display: flex; align-items: center; gap: 4px; }
@@ -79,7 +80,7 @@ input[type=range] { width: 100%; accent-color: #c9a84c; }
 
 <header>
   <h1>🃏 Tarot Deck Knipper</h1>
-  <p>PDF → 9 kaarten · Samsung Frame TV · 2160×3840</p>
+  <p>PDF → kaarten voor Samsung Frame TV · 2160×3840</p>
 </header>
 
 <div class="sectie">
@@ -88,18 +89,24 @@ input[type=range] { width: 100%; accent-color: #c9a84c; }
     <span class="icoon">📄</span>
     <span class="tekst" id="upload-tekst">
       Tik hier om een PDF te kiezen
-      <strong>3×3 grid met 9 tarotkaarten</strong>
+      <strong>Deck (3×3) of Achterkant PDF</strong>
     </span>
   </label>
-  <input type="file" id="pdf-input" accept=".pdf" style="position:fixed;top:-100px;left:-100px;width:1px;height:1px;opacity:0;">
+  <input type="file" id="pdf-input" accept=".pdf">
 
   <div class="veld">
     <label>Anthropic API key (voor naamherkenning)</label>
     <input type="password" id="api-key" placeholder="sk-ant-...">
   </div>
 
+  <!-- Modus kiezen -->
+  <div class="modus-wrap" id="modus-wrap">
+    <button id="modus-kaarten" class="modus-knop actief">🃏 Kaarten 3×3</button>
+    <button id="modus-achterkant" class="modus-knop">🔄 Achterkant</button>
+  </div>
+
   <!-- Pagina navigatie -->
-  <div id="pagina-nav">
+  <div class="nav-wrap" id="pagina-nav">
     <div class="nav-rij">
       <button id="prev-btn" disabled>◀</button>
       <span id="pagina-info">Pagina 1 / 1</span>
@@ -107,9 +114,9 @@ input[type=range] { width: 100%; accent-color: #c9a84c; }
     </div>
   </div>
 
-  <!-- Marges -->
-  <div id="marges-panel">
-    <div class="panel-titel">⚙️ Snijlijnen aanpassen</div>
+  <!-- Marges voor 3×3 modus -->
+  <div class="marges-panel" id="marges-panel">
+    <div class="panel-titel">⚙️ Snijlijnen (3×3 kaarten)</div>
     <div class="slider-rij">
       <div class="lbl">Marge links <span id="v-ml">60</span></div>
       <input type="range" id="s-ml" min="0" max="200" value="60">
@@ -136,8 +143,37 @@ input[type=range] { width: 100%; accent-color: #c9a84c; }
     </div>
   </div>
 
+  <!-- Marges voor achterkant modus -->
+  <div class="marges-panel" id="achterkant-panel">
+    <div class="panel-titel">⚙️ Snijlijnen (achterkant)</div>
+    <div class="slider-rij">
+      <div class="lbl">Marge links <span id="v-aml">20</span></div>
+      <input type="range" id="s-aml" min="0" max="200" value="20">
+    </div>
+    <div class="slider-rij">
+      <div class="lbl">Marge rechts <span id="v-amr">20</span></div>
+      <input type="range" id="s-amr" min="0" max="200" value="20">
+    </div>
+    <div class="slider-rij">
+      <div class="lbl">Marge boven <span id="v-amt">20</span></div>
+      <input type="range" id="s-amt" min="0" max="200" value="20">
+    </div>
+    <div class="slider-rij">
+      <div class="lbl">Marge onder <span id="v-amb">20</span></div>
+      <input type="range" id="s-amb" min="0" max="200" value="20">
+    </div>
+    <div class="slider-rij">
+      <div class="lbl">Kolommen <span id="v-acols">3</span></div>
+      <input type="range" id="s-acols" min="1" max="4" step="1" value="3">
+    </div>
+    <div class="slider-rij">
+      <div class="lbl">Rijen <span id="v-arows">2</span></div>
+      <input type="range" id="s-arows" min="1" max="4" step="1" value="2">
+    </div>
+  </div>
+
   <!-- Preview -->
-  <div id="preview-wrap">
+  <div class="preview-wrap" id="preview-wrap">
     <canvas id="preview-canvas"></canvas>
     <canvas id="overlay-canvas"></canvas>
   </div>
@@ -149,10 +185,11 @@ input[type=range] { width: 100%; accent-color: #c9a84c; }
   <div class="actie-knoppen" id="actie-knoppen">
     <button id="naam-btn">🤖 Namen detecteren</button>
     <button id="knip-btn">✂️ Uitsnijden</button>
-    <button id="deel-alles" style="display:none;">📤 Alle cutouts delen</button>
+    <button id="deel-alles">📤 Alle cutouts delen</button>
   </div>
-  <div id="naam-resultaat" style="display:none;background:#16213e;border-radius:10px;padding:12px;margin-top:10px;border:1px solid #0f3460;">
-    <div style="font-size:0.72rem;color:#777;margin-bottom:6px;">Herkende namen (aanpasbaar):</div>
+
+  <div id="naam-resultaat">
+    <div class="lbl-klein">Herkende namen (aanpasbaar):</div>
     <div id="namen-inputs"></div>
   </div>
 
@@ -161,13 +198,14 @@ input[type=range] { width: 100%; accent-color: #c9a84c; }
 </div>
 
 <script>
-// Schakel worker uit voor iOS compatibiliteit
 pdfjsLib.GlobalWorkerOptions.workerSrc = '';
 
 const UIT_B = 2160, UIT_H = 3840;
 let pdfDoc = null, huidigePagina = 1, totaalPaginas = 1;
 let pageCanvas = null;
 let uitvoerItems = [];
+let huidigNamen = Array(9).fill('');
+let modus = 'kaarten'; // 'kaarten' of 'achterkant'
 
 // API key
 const keyInput = document.getElementById('api-key');
@@ -176,18 +214,16 @@ keyInput.addEventListener('input', () => {
   try { localStorage.setItem('tarot_api_key', keyInput.value.trim()); } catch(e) {}
 });
 
-// Marges laden/opslaan
+// Marges laden
 function laadMarges() {
   try {
     const m = JSON.parse(localStorage.getItem('tarot_marges') || '{}');
-    if (m.ml !== undefined) {
-      ['ml','mr','mt','mb','gx','gy'].forEach(k => {
-        if (m[k] !== undefined) {
-          document.getElementById('s-'+k).value = m[k];
-          document.getElementById('v-'+k).textContent = m[k];
-        }
-      });
-    }
+    ['ml','mr','mt','mb','gx','gy'].forEach(k => {
+      if (m[k] !== undefined) {
+        document.getElementById('s-'+k).value = m[k];
+        document.getElementById('v-'+k).textContent = m[k];
+      }
+    });
   } catch(e) {}
 }
 
@@ -208,7 +244,18 @@ function getMarges() {
   };
 }
 
-// Sliders
+function getAchterkantMarges() {
+  return {
+    ml:   +document.getElementById('s-aml').value,
+    mr:   +document.getElementById('s-amr').value,
+    mt:   +document.getElementById('s-amt').value,
+    mb:   +document.getElementById('s-amb').value,
+    cols: +document.getElementById('s-acols').value,
+    rows: +document.getElementById('s-arows').value,
+  };
+}
+
+// Sliders kaarten
 ['ml','mr','mt','mb','gx','gy'].forEach(id => {
   document.getElementById('s-'+id).addEventListener('input', () => {
     document.getElementById('v-'+id).textContent = document.getElementById('s-'+id).value;
@@ -217,25 +264,45 @@ function getMarges() {
   });
 });
 
+// Sliders achterkant
+['aml','amr','amt','amb','acols','arows'].forEach(id => {
+  document.getElementById('s-'+id).addEventListener('input', () => {
+    document.getElementById('v-'+id).textContent = document.getElementById('s-'+id).value;
+    tekenOverlay();
+  });
+});
+
 laadMarges();
+
+// Modus knoppen
+document.getElementById('modus-kaarten').addEventListener('click', () => setModus('kaarten'));
+document.getElementById('modus-achterkant').addEventListener('click', () => setModus('achterkant'));
+
+function setModus(m) {
+  modus = m;
+  document.getElementById('modus-kaarten').classList.toggle('actief', m === 'kaarten');
+  document.getElementById('modus-achterkant').classList.toggle('actief', m === 'achterkant');
+  document.getElementById('marges-panel').style.display = m === 'kaarten' ? 'block' : 'none';
+  document.getElementById('achterkant-panel').style.display = m === 'achterkant' ? 'block' : 'none';
+  document.getElementById('naam-btn').style.display = m === 'kaarten' ? 'block' : 'none';
+  document.getElementById('naam-resultaat').style.display = 'none';
+  document.getElementById('kaarten-grid').className = m === 'achterkant' ? 'enkel' : '';
+  document.getElementById('kaarten-grid').innerHTML = '';
+  document.getElementById('deel-alles').style.display = 'none';
+  uitvoerItems = [];
+  tekenOverlay();
+}
 
 // PDF laden
 const pdfInput = document.getElementById('pdf-input');
-
 pdfInput.addEventListener('change', function(e) {
   const file = e.target.files && e.target.files[0];
-  if (!file) {
-    setStatus('Geen bestand geselecteerd', '#e74c3c');
-    return;
-  }
-  setStatus(`📄 Bestand: ${file.name} (${(file.size/1024).toFixed(0)} KB) — inlezen...`, '#c9a84c');
-  document.getElementById('upload-tekst').innerHTML = `<strong style="color:#c9a84c">${file.name}</strong><br><span style="font-size:0.75rem">${(file.size/1024).toFixed(0)} KB</span>`;
-  laadPDF(file);
-});
-
-function laadPDF(file) {
+  if (!file) return;
+  document.getElementById('upload-tekst').innerHTML =
+    `<strong style="color:#c9a84c">${file.name}</strong><br><span style="font-size:0.75rem">${(file.size/1024).toFixed(0)} KB</span>`;
+  setStatus('PDF inlezen...', '#888');
   const reader = new FileReader();
-  reader.onload = async function(e) {
+  reader.onload = async (e) => {
     try {
       const data = new Uint8Array(e.target.result);
       pdfDoc = await pdfjsLib.getDocument({ data }).promise;
@@ -247,18 +314,17 @@ function laadPDF(file) {
       document.getElementById('deel-alles').style.display = 'none';
       document.getElementById('naam-resultaat').style.display = 'none';
       document.getElementById('pagina-nav').style.display = totaalPaginas > 1 ? 'block' : 'none';
-      document.getElementById('marges-panel').style.display = 'block';
+      document.getElementById('modus-wrap').style.display = 'flex';
       document.getElementById('actie-knoppen').style.display = 'flex';
+      setModus(modus);
       await renderPagina(1);
     } catch(err) {
       setStatus('❌ PDF fout: ' + err.message, '#e74c3c');
     }
   };
-  reader.onerror = function() {
-    setStatus('❌ Bestand lezen mislukt', '#e74c3c');
-  };
+  reader.onerror = () => setStatus('❌ Bestand lezen mislukt', '#e74c3c');
   reader.readAsArrayBuffer(file);
-}
+});
 
 // Pagina navigatie
 document.getElementById('prev-btn').addEventListener('click', async () => {
@@ -271,11 +337,9 @@ document.getElementById('next-btn').addEventListener('click', async () => {
 async function renderPagina(nr) {
   setStatus(`Pagina ${nr} laden...`, '#888');
   const page = await pdfDoc.getPage(nr);
-  const sc = 2;
-  const vp = page.getViewport({ scale: sc });
+  const vp = page.getViewport({ scale: 2 });
   pageCanvas = document.createElement('canvas');
-  pageCanvas.width = vp.width;
-  pageCanvas.height = vp.height;
+  pageCanvas.width = vp.width; pageCanvas.height = vp.height;
   await page.render({ canvasContext: pageCanvas.getContext('2d'), viewport: vp }).promise;
 
   const pc = document.getElementById('preview-canvas');
@@ -291,46 +355,60 @@ async function renderPagina(nr) {
   document.getElementById('next-btn').disabled = nr >= totaalPaginas;
 
   tekenOverlay();
-  setStatus(`Pagina ${nr}/${totaalPaginas} geladen — stel snijlijnen in`, '#c9a84c');
+  setStatus(`Pagina ${nr}/${totaalPaginas} — stel snijlijnen in`, '#c9a84c');
 }
 
 function tekenOverlay() {
   if (!pageCanvas) return;
   const oc = document.getElementById('overlay-canvas');
-  oc.width = pageCanvas.width;
-  oc.height = pageCanvas.height;
+  oc.width = pageCanvas.width; oc.height = pageCanvas.height;
   const ctx = oc.getContext('2d');
   const sc = 2;
-  const { ml, mr, mt, mb, gx, gy } = getMarges();
   const W = pageCanvas.width, H = pageCanvas.height;
-  const cw = (W - (ml + mr) * sc - 2 * gx * sc) / 3;
-  const ch = (H - (mt + mb) * sc - 2 * gy * sc) / 3;
 
   ctx.fillStyle = 'rgba(0,0,0,0.5)';
   ctx.fillRect(0, 0, W, H);
-
-  for (let r = 0; r < 3; r++) {
-    for (let c = 0; c < 3; c++) {
-      const x = ml * sc + c * (cw + gx * sc);
-      const y = mt * sc + r * (ch + gy * sc);
-      ctx.clearRect(x, y, cw, ch);
-    }
-  }
-
   ctx.strokeStyle = '#ff4444';
   ctx.lineWidth = 2;
-  for (let r = 0; r < 3; r++) {
-    for (let c = 0; c < 3; c++) {
-      const x = ml * sc + c * (cw + gx * sc);
-      const y = mt * sc + r * (ch + gy * sc);
-      ctx.strokeRect(x, y, cw, ch);
+
+  if (modus === 'kaarten') {
+    const { ml, mr, mt, mb, gx, gy } = getMarges();
+    const cw = (W - (ml+mr)*sc - 2*gx*sc) / 3;
+    const ch = (H - (mt+mb)*sc - 2*gy*sc) / 3;
+    for (let r = 0; r < 3; r++) {
+      for (let c = 0; c < 3; c++) {
+        const x = ml*sc + c*(cw+gx*sc);
+        const y = mt*sc + r*(ch+gy*sc);
+        ctx.clearRect(x, y, cw, ch);
+        ctx.strokeRect(x, y, cw, ch);
+      }
+    }
+  } else {
+    const { ml, mr, mt, mb, cols, rows } = getAchterkantMarges();
+    const cw = (W - (ml+mr)*sc) / cols;
+    const ch = (H - (mt+mb)*sc) / rows;
+    // Toon alleen eerste cel (we pakken er maar één)
+    const x = ml*sc;
+    const y = mt*sc;
+    ctx.clearRect(x, y, cw, ch);
+    ctx.strokeStyle = '#c9a84c';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(x, y, cw, ch);
+    ctx.fillStyle = 'rgba(201,168,76,0.15)';
+    ctx.fillRect(x, y, cw, ch);
+    // Teken overige cellen dimmer
+    ctx.strokeStyle = '#ff444488';
+    ctx.lineWidth = 1;
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        if (r === 0 && c === 0) continue;
+        ctx.strokeRect(ml*sc + c*cw, mt*sc + r*ch, cw, ch);
+      }
     }
   }
 }
 
-let huidigNamen = Array(9).fill('');
-
-// Namen detecteren knop
+// Namen detecteren
 document.getElementById('naam-btn').addEventListener('click', async () => {
   const apiKey = keyInput.value.trim();
   if (!apiKey) { alert('Vul eerst je API key in'); return; }
@@ -347,169 +425,176 @@ function toonNamenEditor(namen) {
   grid.innerHTML = '';
   namen.forEach((naam, i) => {
     const inp = document.createElement('input');
-    inp.type = 'text';
-    inp.value = naam;
-    inp.placeholder = `Kaart ${i+1}`;
+    inp.type = 'text'; inp.value = naam; inp.placeholder = `Kaart ${i+1}`;
     inp.addEventListener('input', () => { huidigNamen[i] = inp.value; });
     grid.appendChild(inp);
   });
   wrap.style.display = 'block';
 }
+
+// Uitsnijden
+document.getElementById('knip-btn').addEventListener('click', async () => {
   if (!pageCanvas) return;
   uitvoerItems = [];
   document.getElementById('kaarten-grid').innerHTML = '';
   document.getElementById('deel-alles').style.display = 'none';
 
-  const apiKey = keyInput.value.trim();
-  let namen = null;
-  if (apiKey) {
-    setStatus('🤖 Claude herkent namen...', '#9b59b6');
-    namen = await detecteerNamen(apiKey);
+  if (modus === 'kaarten') {
+    await knipKaarten();
+  } else {
+    await knipAchterkant();
   }
+});
 
+async function knipKaarten() {
   const { ml, mr, mt, mb, gx, gy } = getMarges();
-
-  // Bereken celafmetingen op basis van PDF punten (scale=1)
   const page = await pdfDoc.getPage(huidigePagina);
   const basisVp = page.getViewport({ scale: 1 });
   const PW = basisVp.width, PH = basisVp.height;
-  const celB = (PW - ml - mr - 2 * gx) / 3;
-  const celH = (PH - mt - mb - 2 * gy) / 3;
-
-  // Zoom zodat elke cel minstens uitvoerresolutie heeft, max 6× voor geheugen
-  const zoom = Math.min(12, Math.max(UIT_B / celB, UIT_H / celH));
+  const celB = (PW - ml - mr - 2*gx) / 3;
+  const celH = (PH - mt - mb - 2*gy) / 3;
+  const zoom = Math.min(8, Math.max(UIT_B / celB, UIT_H / celH));
 
   const prog = document.getElementById('prog');
   prog.style.display = 'block';
 
   for (let r = 0; r < 3; r++) {
     for (let c = 0; c < 3; c++) {
-      const idx = r * 3 + c;
-
-      // Snijrechthoek in PDF punten
-      const x0 = ml + c * (celB + gx);
-      const y0 = mt + r * (celH + gy);
-      const rect = [x0, y0, x0 + celB, y0 + celH];
-
-      // Render alleen deze cel op hoge zoom via correcte transform matrix
+      const idx = r*3+c;
+      const x0 = ml + c*(celB+gx);
+      const y0 = mt + r*(celH+gy);
       const vp = page.getViewport({ scale: zoom });
-      const celCanvas = document.createElement('canvas');
-      celCanvas.width  = Math.round(celB * zoom);
-      celCanvas.height = Math.round(celH * zoom);
+      const cel = document.createElement('canvas');
+      cel.width = Math.round(celB*zoom); cel.height = Math.round(celH*zoom);
       await page.render({
-        canvasContext: celCanvas.getContext('2d'),
+        canvasContext: cel.getContext('2d'),
         viewport: vp,
-        transform: [1, 0, 0, 1, -x0 * zoom, -y0 * zoom]
+        transform: [1, 0, 0, 1, -x0*zoom, -y0*zoom]
       }).promise;
 
       const uit = document.createElement('canvas');
       uit.width = UIT_B; uit.height = UIT_H;
       const ctx = uit.getContext('2d');
-      ctx.fillStyle = '#000';
-      ctx.fillRect(0, 0, UIT_B, UIT_H);
-      ctx.imageSmoothingEnabled = true;
-      ctx.imageSmoothingQuality = 'high';
-      ctx.drawImage(celCanvas, 0, 0, UIT_B, UIT_H);
+      ctx.fillStyle = '#000'; ctx.fillRect(0,0,UIT_B,UIT_H);
+      ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(cel, 0, 0, UIT_B, UIT_H);
 
-      const naam = huidigNamen[idx] || `kaart_${idx + 1}`;
+      const naam = huidigNamen[idx] || `kaart_${idx+1}`;
       uitvoerItems.push({ canvas: uit, naam });
       toonKaart(uit, naam);
-
-      document.getElementById('pb').style.width = ((idx + 1) / 9 * 100) + '%';
-      setStatus(`Kaart ${idx + 1}/9 verwerkt...`, '#888');
+      document.getElementById('pb').style.width = ((idx+1)/9*100)+'%';
+      setStatus(`Kaart ${idx+1}/9 verwerkt...`, '#888');
       await sleep(20);
     }
   }
-
   prog.style.display = 'none';
   setStatus('✅ 9 kaarten klaar!', '#27ae60');
   document.getElementById('deel-alles').style.display = 'block';
-});
+}
 
-// Kaart tonen
+async function knipAchterkant() {
+  setStatus('Achterkant uitsnijden...', '#888');
+  const { ml, mr, mt, mb, cols, rows } = getAchterkantMarges();
+  const page = await pdfDoc.getPage(huidigePagina);
+  const basisVp = page.getViewport({ scale: 1 });
+  const PW = basisVp.width, PH = basisVp.height;
+
+  // Eerste cel (linksboven)
+  const celB = (PW - ml - mr) / cols;
+  const celH = (PH - mt - mb) / rows;
+  const x0 = ml, y0 = mt;
+
+  const zoom = Math.min(8, Math.max(UIT_B / celB, UIT_H / celH));
+  const vp = page.getViewport({ scale: zoom });
+  const cel = document.createElement('canvas');
+  cel.width = Math.round(celB*zoom); cel.height = Math.round(celH*zoom);
+
+  await page.render({
+    canvasContext: cel.getContext('2d'),
+    viewport: vp,
+    transform: [1, 0, 0, 1, -x0*zoom, -y0*zoom]
+  }).promise;
+
+  const uit = document.createElement('canvas');
+  uit.width = UIT_B; uit.height = UIT_H;
+  const ctx = uit.getContext('2d');
+  ctx.fillStyle = '#000'; ctx.fillRect(0,0,UIT_B,UIT_H);
+  ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(cel, 0, 0, UIT_B, UIT_H);
+
+  uitvoerItems.push({ canvas: uit, naam: 'Achterkant' });
+  document.getElementById('kaarten-grid').className = 'enkel';
+  toonKaart(uit, 'Achterkant');
+  setStatus('✅ Achterkant klaar!', '#27ae60');
+  document.getElementById('deel-alles').style.display = 'block';
+}
+
 function toonKaart(canvas, naam) {
   const item = document.createElement('div');
   item.className = 'kaart-item';
-
-  const tw = Math.floor((window.innerWidth - 32 - 16) / 3);
+  const tw = modus === 'achterkant'
+    ? Math.min(window.innerWidth - 32, 300)
+    : Math.floor((window.innerWidth - 32 - 16) / 3);
   const th = Math.round(tw * UIT_H / UIT_B);
   const thumb = document.createElement('canvas');
   thumb.width = tw; thumb.height = th;
   thumb.getContext('2d').drawImage(canvas, 0, 0, tw, th);
   item.appendChild(thumb);
-
   const footer = document.createElement('div');
   footer.className = 'kaart-footer';
-
   const naamEl = document.createElement('div');
-  naamEl.className = 'kaart-naam';
-  naamEl.textContent = naam;
+  naamEl.className = 'kaart-naam'; naamEl.textContent = naam;
   footer.appendChild(naamEl);
-
   const knop = document.createElement('button');
-  knop.className = 'deel-knop';
-  knop.textContent = '📤';
+  knop.className = 'deel-knop'; knop.textContent = '📤';
   knop.addEventListener('click', () => deelKaart(canvas, naam));
   footer.appendChild(knop);
-
   item.appendChild(footer);
   document.getElementById('kaarten-grid').appendChild(item);
 }
 
-// Deel kaart
 async function deelKaart(canvas, naam) {
   try {
     const blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 1.0));
-    const file = new File([blob], naam + '.jpg', { type: 'image/jpeg' });
+    const file = new File([blob], naam+'.jpg', { type: 'image/jpeg' });
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
       await navigator.share({ files: [file], title: naam });
     } else {
       const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = naam + '.jpg';
-      a.click();
+      a.href = URL.createObjectURL(blob); a.download = naam+'.jpg'; a.click();
     }
-  } catch(e) {
-    if (e.name !== 'AbortError') alert('Fout: ' + e.message);
-  }
+  } catch(e) { if (e.name !== 'AbortError') alert('Fout: '+e.message); }
 }
 
-// Deel alles
 document.getElementById('deel-alles').addEventListener('click', async () => {
   const files = [];
   for (const { canvas, naam } of uitvoerItems) {
     const blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 1.0));
-    files.push(new File([blob], naam + '.jpg', { type: 'image/jpeg' }));
+    files.push(new File([blob], naam+'.jpg', { type: 'image/jpeg' }));
   }
   try {
     if (navigator.canShare && navigator.canShare({ files })) {
       await navigator.share({ files, title: 'Tarotkaarten' });
     } else {
-      const zip = new JSZip();
-      for (const f of files) zip.file(f.name, f);
-      const blob = await zip.generateAsync({ type: 'blob' });
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = 'tarotkaarten.zip';
-      a.click();
+      for (const f of files) {
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(f); a.download = f.name; a.click();
+        await sleep(300);
+      }
     }
-  } catch(e) {
-    if (e.name !== 'AbortError') alert('Fout: ' + e.message);
-  }
+  } catch(e) { if (e.name !== 'AbortError') alert('Fout: '+e.message); }
 });
 
-// AI naamherkenning
 async function detecteerNamen(apiKey) {
   try {
-    setStatus('🤖 Pagina renderen voor AI...', '#9b59b6');
+    setStatus('🤖 Pagina renderen...', '#9b59b6');
     const page = await pdfDoc.getPage(huidigePagina);
     const vp = page.getViewport({ scale: 1.5 });
     const tmp = document.createElement('canvas');
     tmp.width = vp.width; tmp.height = vp.height;
     await page.render({ canvasContext: tmp.getContext('2d'), viewport: vp }).promise;
     const b64 = tmp.toDataURL('image/jpeg', 0.85).split(',')[1];
-
-    setStatus('🤖 Claude analyseert namen...', '#9b59b6');
+    setStatus('🤖 Claude analyseert...', '#9b59b6');
     const resp = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -519,42 +604,27 @@ async function detecteerNamen(apiKey) {
         'anthropic-dangerous-direct-browser-access': 'true'
       },
       body: JSON.stringify({
-        model: 'claude-opus-4-5',
-        max_tokens: 200,
-        messages: [{
-          role: 'user',
-          content: [
-            { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: b64 }},
-            { type: 'text', text: 'Dit is een pagina met 9 tarotkaarten in een 3x3 grid. Elke kaart heeft onderaan een naam. Geef ALLEEN de 9 namen terug, van links naar rechts en van boven naar beneden. Één naam per regel, geen nummers, geen extra tekst, geen lege regels.' }
-          ]
-        }]
+        model: 'claude-opus-4-5', max_tokens: 200,
+        messages: [{ role: 'user', content: [
+          { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: b64 }},
+          { type: 'text', text: 'Dit is een pagina met 9 tarotkaarten in een 3x3 grid. Elke kaart heeft onderaan een naam. Geef ALLEEN de 9 namen terug, van links naar rechts en van boven naar beneden. Één naam per regel, geen nummers, geen extra tekst, geen lege regels.' }
+        ]}]
       })
     });
-
     const data = await resp.json();
-    if (!resp.ok) {
-      const fout = data.error?.message || resp.status;
-      setStatus('❌ API fout: ' + fout, '#e74c3c');
-      return null;
-    }
-
-    const namen = data.content[0].text.trim().split('\n').map(s => s.trim()).filter(Boolean).slice(0, 9);
+    if (!resp.ok) { setStatus('❌ API fout: '+(data.error?.message||resp.status), '#e74c3c'); return null; }
+    const namen = data.content[0].text.trim().split('\n').map(s=>s.trim()).filter(Boolean).slice(0,9);
     while (namen.length < 9) namen.push('');
-    setStatus('✅ Namen: ' + namen.filter(Boolean).join(', '), '#27ae60');
+    setStatus('✅ Namen: '+namen.filter(Boolean).join(', '), '#27ae60');
     return namen;
   } catch(e) {
-    setStatus('❌ Naamherkenning fout: ' + e.message, '#e74c3c');
+    setStatus('❌ Fout: '+e.message, '#e74c3c');
     return null;
   }
 }
 
-function setStatus(t, kleur) {
-  const el = document.getElementById('status');
-  el.textContent = t;
-  el.style.color = kleur || '#888';
-}
-
-function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+function setStatus(t, k) { const el=document.getElementById('status'); el.textContent=t; el.style.color=k||'#888'; }
+function sleep(ms) { return new Promise(r=>setTimeout(r,ms)); }
 </script>
 </body>
 </html>
