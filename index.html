@@ -85,10 +85,25 @@ const FORMATS = {
     ref_breedte: 2940, hoogte_max: 9999,
     kaarten: [
       { naam: "VERLEDEN", rect: [ 150, 150,  950, 1520] },
-      { naam: "HEDEN",    rect: [1070, 150, 1870, 1520] },
+      { naam: "HEDEN",    rect: [1250, 150, 2030, 1520] },
       { naam: "TOEKOMST", rect: [1990, 150, 2790, 1520] },
     ],
     landschap: { rect: [30, 30, 2910, 1640], naam: "Legging_Landschap" }
+  },
+  "enkel": {
+    ref_breedte: 1100, hoogte_max: 9999,
+    kaarten: [
+      { naam: "Kaart", rect: [150, 150, 950, 1520] },
+    ],
+    landschap: null
+  },
+  "dubbel": {
+    ref_breedte: 2020, hoogte_max: 9999,
+    kaarten: [
+      { naam: "Kaart_1", rect: [ 150, 150,  950, 1520] },
+      { naam: "Kaart_2", rect: [1070, 150, 1870, 1520] },
+    ],
+    landschap: null
   }
 };
 
@@ -139,8 +154,17 @@ async function verwerkAfbeelding(file) {
 
   const W = img.width, H = img.height;
 
-  // Altijd Tarot_Legging_Kaarten
-  const formatKey = 'Tarot_Legging_Kaarten';
+  // Detecteer formaat op breedte
+  let formatKey;
+  if (file.name.includes('Tarot_Legging_Kaarten')) {
+    formatKey = 'Tarot_Legging_Kaarten';
+  } else if (W < 1500) {
+    formatKey = 'enkel';    // ~1100px breed = 1 kaart
+  } else if (W < 2500) {
+    formatKey = 'dubbel';   // ~2020px breed = 2 kaarten
+  } else {
+    formatKey = 'Tarot_Legging_Kaarten'; // ~2940px breed = 3 kaarten
+  }
 
   const fmt = FORMATS[formatKey];
   const schaal = W / fmt.ref_breedte;
