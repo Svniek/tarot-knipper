@@ -255,38 +255,26 @@ document.getElementById('maak-podcast-btn').addEventListener('click', async () =
 
   const titel = document.getElementById('podcast-titel').value.trim() || 'Naam episode';
   const SIZE = 3000;
+  const aantalKaarten = Math.min(kaartCanvassen.length, 3);
+
+  // Bereken kaartbreedte op basis van aantal, met max hoogte van 2000px
+  const marge = 80, gap = 40;
+  const maxKaartH = 2000;
+  let kaartB = Math.floor((SIZE - 2*marge - (aantalKaarten-1)*gap) / aantalKaarten);
+  let kaartH = Math.round(kaartB * UIT_H / UIT_B);
+  if (kaartH > maxKaartH) {
+    kaartH = maxKaartH;
+    kaartB = Math.round(kaartH * UIT_B / UIT_H);
+  }
+
+  // Centreer kaarten horizontaal en verticaal (iets onder midden voor ruimte titel)
+  const totaalB = aantalKaarten * kaartB + (aantalKaarten-1) * gap;
+  const kaartStartX = Math.round((SIZE - totaalB) / 2);
+  const kaartY = Math.round((SIZE - kaartH) / 2) + 100;
 
   podcastCanvas = document.createElement('canvas');
   podcastCanvas.width = SIZE; podcastCanvas.height = SIZE;
   const ctx = podcastCanvas.getContext('2d');
-
-  // Achtergrond
-  if (achtergrondImg) {
-    ctx.drawImage(achtergrondImg, 0, 0, SIZE, SIZE);
-  } else {
-    // Fallback: paars verloop
-    const grad = ctx.createLinearGradient(0, 0, SIZE, SIZE);
-    grad.addColorStop(0, '#1a0a2e');
-    grad.addColorStop(0.5, '#3d1266');
-    grad.addColorStop(1, '#0d0622');
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, SIZE, SIZE);
-  }
-
-  // Lichte overlay voor leesbaarheid
-  ctx.fillStyle = 'rgba(0,0,0,0.15)';
-  ctx.fillRect(0, 0, SIZE, SIZE);
-
-  // Kaarten plaatsen
-  const aantalKaarten = Math.min(kaartCanvassen.length, 3);
-  const marge = 80;
-  const gap = 40;
-  const kaartB = Math.floor((SIZE - 2*marge - (aantalKaarten-1)*gap) / aantalKaarten);
-  const kaartH = Math.round(kaartB * UIT_H / UIT_B);
-  const kaartY = Math.round((SIZE - kaartH) / 2) + 80; // iets lager voor titel
-
-  for (let i = 0; i < aantalKaarten; i++) {
-    const kx = marge + i * (kaartB + gap);
 
     // Schaduw
     ctx.shadowColor = 'rgba(0,0,0,0.7)';
