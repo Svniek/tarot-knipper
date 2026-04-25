@@ -30,10 +30,8 @@ label.upload .tekst strong { color: #c9a84c; display: block; margin-top: 6px; }
 .kaart-footer { padding: 6px 8px; display: flex; align-items: center; gap: 4px; }
 .kaart-naam { font-size: 0.62rem; color: #c9a84c; font-weight: bold; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .deel-knop { background: #c9a84c; color: #1a1a2e; border: none; border-radius: 6px; padding: 5px 8px; font-size: 0.7rem; font-weight: bold; cursor: pointer; }
-
-/* Podcast Art Panel */
 .podcast-panel { display: none; background: #16213e; border-radius: 14px; padding: 16px; margin-top: 14px; border: 1px solid #7d3c98; }
-.podcast-titel-sectie { font-size: 0.82rem; color: #9b59b6; font-weight: bold; margin-bottom: 12px; }
+.podcast-panel .ptitel { font-size: 0.82rem; color: #9b59b6; font-weight: bold; margin-bottom: 12px; }
 .podcast-panel label.bg-upload { display: block; border: 2px dashed #7d3c9866; border-radius: 10px; padding: 14px; text-align: center; cursor: pointer; font-size: 0.8rem; color: #aaa; margin-bottom: 10px; }
 .podcast-panel label.bg-upload strong { color: #9b59b6; display: block; margin-top: 3px; font-size: 0.75rem; }
 .podcast-panel input[type=text] { width: 100%; background: #0f3460; border: 1px solid #7d3c98; color: #eee; border-radius: 8px; padding: 10px 12px; font-size: 1rem; text-align: center; margin-bottom: 10px; }
@@ -73,12 +71,11 @@ label.upload .tekst strong { color: #c9a84c; display: block; margin-top: 6px; }
 
   <div id="kaarten-grid"></div>
 
-  <!-- Podcast Art -->
   <div class="podcast-panel" id="podcast-panel">
-    <div class="podcast-titel-sectie">🎙️ Podcast Art maken (3000×3000 PNG)</div>
+    <div class="ptitel">🎙️ Podcast Art maken (3000×3000 PNG)</div>
     <label class="bg-upload" for="bg-input">
       📸 Kies achtergrondafbeelding
-      <strong>Sterrennacht of andere achtergrond</strong>
+      <strong id="bg-label">Sterrennacht of andere achtergrond</strong>
     </label>
     <input type="file" id="bg-input" accept="image/*" style="display:none;">
     <input type="text" id="podcast-titel" placeholder="Naam episode">
@@ -92,7 +89,7 @@ label.upload .tekst strong { color: #c9a84c; display: block; margin-top: 6px; }
 <script>
 const FORMATS = {
   "Tarot_Legging_Kaarten": {
-    ref_breedte: 2940, hoogte_max: 9999,
+    ref_breedte: 2940,
     kaarten: [
       { naam: "VERLEDEN", rect: [ 150, 150,  950, 1520] },
       { naam: "HEDEN",    rect: [1050, 150, 1870, 1520] },
@@ -101,12 +98,12 @@ const FORMATS = {
     landschap: { rect: [30, 30, 2910, 1640], naam: "Legging_Landschap" }
   },
   "enkel": {
-    ref_breedte: 1100, hoogte_max: 9999,
+    ref_breedte: 1100,
     kaarten: [{ naam: "Kaart", rect: [150, 150, 950, 1520] }],
     landschap: null
   },
   "dubbel": {
-    ref_breedte: 2020, hoogte_max: 9999,
+    ref_breedte: 2020,
     kaarten: [
       { naam: "Kaart_1", rect: [ 150, 150,  950, 1520] },
       { naam: "Kaart_2", rect: [1070, 150, 1870, 1520] },
@@ -138,25 +135,44 @@ document.getElementById('bg-input').addEventListener('change', function() {
   if (this.files && this.files[0]) {
     laadAfbeelding(this.files[0]).then(img => {
       achtergrondImg = img;
-      document.querySelector('.bg-upload strong').textContent = '✅ ' + this.files[0].name;
+      document.getElementById('bg-label').textContent = '✅ ' + this.files[0].name;
     });
   }
 });
 
-function setStatus(t, k) { const el = document.getElementById('status'); el.textContent = t; el.style.color = k || '#888'; }
-function setProgress(p) { const prog = document.getElementById('prog'); prog.style.display = p > 0 && p < 100 ? 'block' : 'none'; document.getElementById('pb').style.width = p + '%'; }
+function setStatus(t, k) {
+  const el = document.getElementById('status');
+  el.textContent = t;
+  el.style.color = k || '#888';
+}
+
+function setProgress(p) {
+  const prog = document.getElementById('prog');
+  prog.style.display = (p > 0 && p < 100) ? 'block' : 'none';
+  document.getElementById('pb').style.width = p + '%';
+}
 
 async function verwerkAfbeelding(file) {
   setStatus('Afbeelding laden...', '#888');
   document.getElementById('kaarten-grid').innerHTML = '';
   document.getElementById('deel-alles').style.display = 'none';
   document.getElementById('podcast-panel').style.display = 'none';
+  document.getElementById('podcast-preview').style.display = 'none';
+  document.getElementById('deel-podcast-btn').style.display = 'none';
   uitvoerCanvas = [];
   huidigNamen = [];
 
-  const img = await laadAfbeelding(file);
+  let img;
+  try {
+    img = await laadAfbeelding(file);
+  } catch(e) {
+    setStatus('❌ Laden mislukt: ' + e.message, '#e74c3c');
+    return;
+  }
+
   const W = img.width, H = img.height;
 
+  // Formaat detecteren op breedte
   let formatKey;
   if (file.name.includes('Tarot_Legging_Kaarten')) formatKey = 'Tarot_Legging_Kaarten';
   else if (W < 1500) formatKey = 'enkel';
@@ -165,15 +181,17 @@ async function verwerkAfbeelding(file) {
 
   const fmt = FORMATS[formatKey];
   const schaal = W / fmt.ref_breedte;
-  setStatus(`${W}×${H}px · ${fmt.kaarten.length} kaart(en) · schaal ${schaal.toFixed(2)}×`, '#c9a84c');
+  setStatus(`${W}×${H}px · ${fmt.kaarten.length} kaart(en)`, '#c9a84c');
 
+  // Naamherkenning
   const apiKey = keyInput.value.trim();
   if (apiKey) {
-    setStatus('🤖 Claude herkent namen...', '#9b59b6');
+    setStatus('🤖 Namen herkennen...', '#9b59b6');
     const namen = await detecteerNamen(file, apiKey, fmt.kaarten.length);
     if (namen) huidigNamen = namen;
   }
 
+  // Kaarten uitsnijden
   setProgress(10);
   for (let i = 0; i < fmt.kaarten.length; i++) {
     const k = fmt.kaarten[i];
@@ -183,53 +201,59 @@ async function verwerkAfbeelding(file) {
     const y1 = Math.round(k.rect[3] * schaal);
 
     const src = document.createElement('canvas');
-    src.width = x1-x0; src.height = y1-y0;
+    src.width = x1 - x0; src.height = y1 - y0;
     src.getContext('2d').drawImage(img, x0, y0, x1-x0, y1-y0, 0, 0, src.width, src.height);
 
     const uit = document.createElement('canvas');
     uit.width = UIT_B; uit.height = UIT_H;
     const ctx = uit.getContext('2d');
-    ctx.fillStyle = '#000'; ctx.fillRect(0, 0, UIT_B, UIT_H);
-    ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, UIT_B, UIT_H);
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
     ctx.drawImage(src, 0, 0, UIT_B, UIT_H);
 
     const naam = huidigNamen[i] || k.naam;
-    uitvoerCanvas.push({ canvas: uit, naam });
-    toonKaart(uit, naam);
-    setProgress(((i+1) / fmt.kaarten.length) * 80);
+    uitvoerCanvas.push({ canvas: uit, naam, isLandschap: false });
+    toonKaart(uit, naam, false);
+    setProgress(((i + 1) / fmt.kaarten.length) * 80);
     await sleep(30);
   }
 
   // Landschap versie
   if (fmt.landschap) {
     const l = fmt.landschap;
-    const lx0 = Math.round(l.rect[0]*schaal), ly0 = Math.round(l.rect[1]*schaal);
-    const lx1 = Math.round(l.rect[2]*schaal), ly1 = Math.round(l.rect[3]*schaal);
+    const lx0 = Math.round(l.rect[0] * schaal);
+    const ly0 = Math.round(l.rect[1] * schaal);
+    const lx1 = Math.round(l.rect[2] * schaal);
+    const ly1 = Math.round(l.rect[3] * schaal);
     const land = document.createElement('canvas');
     land.width = 3840; land.height = 2160;
     const lctx = land.getContext('2d');
-    lctx.fillStyle = '#000'; lctx.fillRect(0, 0, 3840, 2160);
-    lctx.imageSmoothingEnabled = true; lctx.imageSmoothingQuality = 'high';
+    lctx.fillStyle = '#000';
+    lctx.fillRect(0, 0, 3840, 2160);
+    lctx.imageSmoothingEnabled = true;
+    lctx.imageSmoothingQuality = 'high';
     lctx.drawImage(img, lx0, ly0, lx1-lx0, ly1-ly0, 0, 0, 3840, 2160);
-    uitvoerCanvas.push({ canvas: land, naam: l.naam });
+    uitvoerCanvas.push({ canvas: land, naam: l.naam, isLandschap: true });
     toonKaart(land, l.naam, true);
   }
 
   setProgress(100);
   setStatus('✅ Klaar!', '#27ae60');
   document.getElementById('deel-alles').style.display = 'block';
-
-  // Toon podcast panel bij 1, 2 of 3 kaarten
-  if (fmt.kaarten.length >= 1) {
-    document.getElementById('podcast-panel').style.display = 'block';
-  }
+  document.getElementById('podcast-panel').style.display = 'block';
 }
 
-function toonKaart(canvas, naam, isLandschap = false) {
+function toonKaart(canvas, naam, isLandschap) {
   const item = document.createElement('div');
   item.className = 'kaart-item';
-  const tw = isLandschap ? Math.min(window.innerWidth - 32, 400) : Math.floor((window.innerWidth - 32 - 16) / 3);
-  const th = isLandschap ? Math.round(tw * 2160/3840) : Math.round(tw * UIT_H/UIT_B);
+  const tw = isLandschap
+    ? Math.min(window.innerWidth - 32, 400)
+    : Math.floor((window.innerWidth - 32 - 16) / 3);
+  const th = isLandschap
+    ? Math.round(tw * 2160 / 3840)
+    : Math.round(tw * UIT_H / UIT_B);
   const thumb = document.createElement('canvas');
   thumb.width = tw; thumb.height = th;
   thumb.getContext('2d').drawImage(canvas, 0, 0, tw, th);
@@ -241,90 +265,107 @@ function toonKaart(canvas, naam, isLandschap = false) {
   naamEl.textContent = isLandschap ? '🖼️ ' + naam : naam;
   footer.appendChild(naamEl);
   const knop = document.createElement('button');
-  knop.className = 'deel-knop'; knop.textContent = '📤';
+  knop.className = 'deel-knop';
+  knop.textContent = '📤';
   knop.addEventListener('click', () => deelKaart(canvas, naam));
   footer.appendChild(knop);
   item.appendChild(footer);
   document.getElementById('kaarten-grid').appendChild(item);
 }
 
-// Podcast Art genereren
+// Podcast Art
 document.getElementById('maak-podcast-btn').addEventListener('click', async () => {
-  const kaartCanvassen = uitvoerCanvas.filter(c => !c.naam.includes('Landschap'));
-  if (kaartCanvassen.length === 0) { alert('Snijd eerst kaarten uit'); return; }
+  const kaartItems = uitvoerCanvas.filter(c => !c.isLandschap);
+  if (kaartItems.length === 0) {
+    setStatus('❌ Geen kaarten gevonden', '#e74c3c');
+    return;
+  }
 
   const titel = document.getElementById('podcast-titel').value.trim() || 'Naam episode';
   const SIZE = 3000;
-  const aantalKaarten = Math.min(kaartCanvassen.length, 3);
+  const aantal = kaartItems.length;
 
-  // Bereken kaartbreedte op basis van aantal, met max hoogte van 2000px
+  // Bereken kaartafmetingen — max hoogte 2000px
   const marge = 80, gap = 40;
-  const maxKaartH = 2000;
-  let kaartB = Math.floor((SIZE - 2*marge - (aantalKaarten-1)*gap) / aantalKaarten);
+  let kaartB = Math.floor((SIZE - 2*marge - (aantal-1)*gap) / aantal);
   let kaartH = Math.round(kaartB * UIT_H / UIT_B);
-  if (kaartH > maxKaartH) {
-    kaartH = maxKaartH;
+  if (kaartH > 2000) {
+    kaartH = 2000;
     kaartB = Math.round(kaartH * UIT_B / UIT_H);
   }
 
-  // Centreer kaarten horizontaal en verticaal (iets onder midden voor ruimte titel)
-  const totaalB = aantalKaarten * kaartB + (aantalKaarten-1) * gap;
-  const kaartStartX = Math.round((SIZE - totaalB) / 2);
+  // Centreer horizontaal, verticaal iets naar beneden voor titel
+  const totaalB = aantal * kaartB + (aantal-1) * gap;
+  const kaartX = Math.round((SIZE - totaalB) / 2);
   const kaartY = Math.round((SIZE - kaartH) / 2) + 100;
 
   podcastCanvas = document.createElement('canvas');
-  podcastCanvas.width = SIZE; podcastCanvas.height = SIZE;
+  podcastCanvas.width = SIZE;
+  podcastCanvas.height = SIZE;
   const ctx = podcastCanvas.getContext('2d');
 
+  // Achtergrond
+  if (achtergrondImg) {
+    ctx.drawImage(achtergrondImg, 0, 0, SIZE, SIZE);
+  } else {
+    const grad = ctx.createLinearGradient(0, 0, SIZE, SIZE);
+    grad.addColorStop(0, '#1a0a2e');
+    grad.addColorStop(0.5, '#3d1266');
+    grad.addColorStop(1, '#0d0622');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, SIZE, SIZE);
+  }
+
+  // Donkere overlay
+  ctx.fillStyle = 'rgba(0,0,0,0.15)';
+  ctx.fillRect(0, 0, SIZE, SIZE);
+
+  // Kaarten tekenen
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  for (let i = 0; i < aantal; i++) {
+    const kx = kaartX + i * (kaartB + gap);
     // Schaduw
     ctx.shadowColor = 'rgba(0,0,0,0.7)';
     ctx.shadowBlur = 30;
     ctx.shadowOffsetX = 8;
     ctx.shadowOffsetY = 8;
-
-    // Kaart
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = 'high';
-    ctx.drawImage(kaartCanvassen[i].canvas, kx, kaartY, kaartB, kaartH);
+    ctx.drawImage(kaartItems[i].canvas, kx, kaartY, kaartB, kaartH);
     ctx.shadowColor = 'transparent';
     ctx.shadowBlur = 0;
     ctx.shadowOffsetX = 0;
     ctx.shadowOffsetY = 0;
-
-    // Gouden rand om kaart
+    // Gouden rand
     ctx.strokeStyle = '#c9a84c';
-    ctx.lineWidth = 4;
+    ctx.lineWidth = 5;
     ctx.strokeRect(kx, kaartY, kaartB, kaartH);
   }
 
-  // Titel verticaal gecentreerd in de ruimte boven de kaarten
-  const ruimteBoven = kaartY; // pixels boven de kaarten
-  const titelY = Math.round(ruimteBoven / 2) + Math.round(fontSize / 2);
+  // Titel gecentreerd in ruimte boven kaarten
   const fontSize = Math.round(SIZE * 0.065);
   ctx.font = `bold ${fontSize}px Georgia, serif`;
   ctx.textAlign = 'center';
+  const titelY = Math.round(kaartY / 2) + Math.round(fontSize / 2);
 
-  // Gouden gloed achter tekst
+  // Schaduw achter tekst
   ctx.shadowColor = 'rgba(0,0,0,0.9)';
   ctx.shadowBlur = 20;
   ctx.fillStyle = '#c9a84c';
-  ctx.fillText(titel, SIZE/2, titelY);
-
-  // Tweede laag voor gloed effect
+  ctx.fillText(titel, SIZE / 2, titelY);
+  // Gloed laag
   ctx.shadowColor = '#c9a84c';
   ctx.shadowBlur = 15;
   ctx.fillStyle = '#f0d080';
-  ctx.fillText(titel, SIZE/2, titelY);
+  ctx.fillText(titel, SIZE / 2, titelY);
   ctx.shadowBlur = 0;
   ctx.shadowColor = 'transparent';
 
-  // Toon preview
+  // Preview tonen
   const prev = document.getElementById('podcast-preview');
   const pw = window.innerWidth - 32;
   prev.width = pw; prev.height = pw;
   prev.style.display = 'block';
   prev.getContext('2d').drawImage(podcastCanvas, 0, 0, pw, pw);
-
   document.getElementById('deel-podcast-btn').style.display = 'block';
   setStatus('🎙️ Podcast Art klaar!', '#9b59b6');
 });
@@ -332,10 +373,10 @@ document.getElementById('maak-podcast-btn').addEventListener('click', async () =
 // Podcast Art delen
 document.getElementById('deel-podcast-btn').addEventListener('click', async () => {
   if (!podcastCanvas) return;
-  const titel = document.getElementById('podcast-titel').value.trim() || 'podcast_art';
+  const titel = (document.getElementById('podcast-titel').value.trim() || 'podcast_art').replace(/\s+/g, '_');
   try {
     const blob = await new Promise(r => podcastCanvas.toBlob(r, 'image/png'));
-    const file = new File([blob], titel.replace(/\s+/g,'_') + '.png', { type: 'image/png' });
+    const file = new File([blob], titel + '.png', { type: 'image/png' });
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
       await navigator.share({ files: [file], title: titel });
     } else {
@@ -345,7 +386,7 @@ document.getElementById('deel-podcast-btn').addEventListener('click', async () =
   } catch(e) { if (e.name !== 'AbortError') alert('Fout: ' + e.message); }
 });
 
-// Deel alles
+// Alle cutouts delen
 document.getElementById('deel-alles').addEventListener('click', async () => {
   const files = [];
   for (const { canvas, naam } of uitvoerCanvas) {
@@ -415,8 +456,6 @@ function bestandNaarBase64(file) {
   });
 }
 
-function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
-
 async function deelKaart(canvas, naam) {
   try {
     const blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 1.0));
@@ -429,6 +468,8 @@ async function deelKaart(canvas, naam) {
     }
   } catch(e) { if (e.name !== 'AbortError') alert('Fout: ' + e.message); }
 }
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 </script>
 </body>
 </html>
