@@ -13,38 +13,34 @@ header { background: #16213e; border-bottom: 1px solid #0f3460; padding: 16px 20
 header h1 { font-size: 1.2rem; color: #c9a84c; }
 header p  { font-size: 0.72rem; color: #555; margin-top: 2px; }
 .sectie { padding: 16px; }
-
-label.upload {
-  display: block;
-  border: 2px dashed #c9a84c55;
-  border-radius: 14px;
-  padding: 36px 20px;
-  text-align: center;
-  background: #16213e;
-  cursor: pointer;
-}
+label.upload { display: block; border: 2px dashed #c9a84c55; border-radius: 14px; padding: 36px 20px; text-align: center; background: #16213e; cursor: pointer; }
 label.upload .icoon { font-size: 3rem; display: block; margin-bottom: 10px; }
 label.upload .tekst { color: #aaa; font-size: 0.9rem; line-height: 1.6; }
 label.upload .tekst strong { color: #c9a84c; display: block; margin-top: 6px; }
-#foto-input { display: none; }
-
 .veld { background: #16213e; border-radius: 14px; padding: 14px 16px; margin-top: 14px; border: 1px solid #0f3460; }
 .veld label { font-size: 0.75rem; color: #777; display: block; margin-bottom: 6px; }
 .veld input { width: 100%; background: #0f3460; border: 1px solid #1a4a8a; color: #eee; border-radius: 8px; padding: 10px 12px; font-size: 0.78rem; font-family: monospace; }
-
 #status { background: #16213e; border-radius: 10px; padding: 12px 16px; margin-top: 14px; font-size: 0.82rem; color: #888; text-align: center; border: 1px solid #0f3460; min-height: 44px; }
-
 .progress { height: 4px; background: #0f3460; border-radius: 2px; margin-top: 10px; display: none; }
 .progress-bar { height: 100%; background: #c9a84c; width: 0%; border-radius: 2px; transition: width 0.2s; }
-
 #deel-alles { display: none; width: 100%; padding: 15px; background: #27ae60; color: #fff; border: none; border-radius: 14px; font-size: 1rem; font-weight: bold; cursor: pointer; margin-top: 14px; }
+#kaarten-grid { margin-top: 14px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+.kaart-item { background: #16213e; border-radius: 10px; overflow: hidden; border: 1px solid #0f3460; }
+.kaart-item canvas { width: 100%; display: block; }
+.kaart-footer { padding: 6px 8px; display: flex; align-items: center; gap: 4px; }
+.kaart-naam { font-size: 0.62rem; color: #c9a84c; font-weight: bold; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.deel-knop { background: #c9a84c; color: #1a1a2e; border: none; border-radius: 6px; padding: 5px 8px; font-size: 0.7rem; font-weight: bold; cursor: pointer; }
 
-#kaarten-grid { margin-top: 14px; display: grid; grid-template-columns: 1fr; gap: 14px; }
-.kaart-item { background: #16213e; border-radius: 14px; overflow: hidden; border: 1px solid #0f3460; }
-.kaart-item img { width: 100%; display: block; }
-.kaart-footer { padding: 10px 14px; display: flex; align-items: center; gap: 8px; }
-.kaart-naam { font-size: 0.8rem; color: #c9a84c; font-weight: bold; flex: 1; }
-.deel-knop { background: #c9a84c; color: #1a1a2e; border: none; border-radius: 8px; padding: 8px 16px; font-size: 0.82rem; font-weight: bold; cursor: pointer; }
+/* Podcast Art Panel */
+.podcast-panel { display: none; background: #16213e; border-radius: 14px; padding: 16px; margin-top: 14px; border: 1px solid #7d3c98; }
+.podcast-titel-sectie { font-size: 0.82rem; color: #9b59b6; font-weight: bold; margin-bottom: 12px; }
+.podcast-panel label.bg-upload { display: block; border: 2px dashed #7d3c9866; border-radius: 10px; padding: 14px; text-align: center; cursor: pointer; font-size: 0.8rem; color: #aaa; margin-bottom: 10px; }
+.podcast-panel label.bg-upload strong { color: #9b59b6; display: block; margin-top: 3px; font-size: 0.75rem; }
+.podcast-panel input[type=text] { width: 100%; background: #0f3460; border: 1px solid #7d3c98; color: #eee; border-radius: 8px; padding: 10px 12px; font-size: 1rem; text-align: center; margin-bottom: 10px; }
+.podcast-panel input[type=text]::placeholder { color: #444; }
+#maak-podcast-btn { width: 100%; padding: 12px; background: #7d3c98; color: #fff; border: none; border-radius: 10px; font-size: 0.9rem; font-weight: bold; cursor: pointer; }
+#podcast-preview { width: 100%; border-radius: 10px; margin-top: 12px; display: none; }
+#deel-podcast-btn { display: none; width: 100%; padding: 12px; background: #27ae60; color: #fff; border: none; border-radius: 10px; font-size: 0.9rem; font-weight: bold; cursor: pointer; margin-top: 8px; }
 </style>
 </head>
 <body>
@@ -60,10 +56,10 @@ label.upload .tekst strong { color: #c9a84c; display: block; margin-top: 6px; }
     <span class="icoon">🖼️</span>
     <span class="tekst">
       Tik hier om een foto te kiezen
-      <strong>Tarot_Legging_Kaarten of Tarot_Legging_Uitleg</strong>
+      <strong>1 kaart · 2 kaarten · 3 kaarten legging</strong>
     </span>
   </label>
-  <input type="file" id="foto-input" accept="image/*">
+  <input type="file" id="foto-input" accept="image/*" style="display:none;">
 
   <div class="veld">
     <label>Anthropic API key (voor naamherkenning)</label>
@@ -76,6 +72,20 @@ label.upload .tekst strong { color: #c9a84c; display: block; margin-top: 6px; }
   <button id="deel-alles">📤 Alle cutouts delen</button>
 
   <div id="kaarten-grid"></div>
+
+  <!-- Podcast Art -->
+  <div class="podcast-panel" id="podcast-panel">
+    <div class="podcast-titel-sectie">🎙️ Podcast Art maken (3000×3000 PNG)</div>
+    <label class="bg-upload" for="bg-input">
+      📸 Kies achtergrondafbeelding
+      <strong>Sterrennacht of andere achtergrond</strong>
+    </label>
+    <input type="file" id="bg-input" accept="image/*" style="display:none;">
+    <input type="text" id="podcast-titel" placeholder="Naam episode">
+    <button id="maak-podcast-btn">🎨 Genereer Podcast Art</button>
+    <canvas id="podcast-preview"></canvas>
+    <button id="deel-podcast-btn">📤 Deel Podcast Art</button>
+  </div>
 
 </div>
 
@@ -92,9 +102,7 @@ const FORMATS = {
   },
   "enkel": {
     ref_breedte: 1100, hoogte_max: 9999,
-    kaarten: [
-      { naam: "Kaart", rect: [150, 150, 950, 1520] },
-    ],
+    kaarten: [{ naam: "Kaart", rect: [150, 150, 950, 1520] }],
     landschap: null
   },
   "dubbel": {
@@ -109,7 +117,9 @@ const FORMATS = {
 
 const UIT_B = 2160, UIT_H = 3840;
 let uitvoerCanvas = [];
-let huidigNamen = ["VERLEDEN", "HEDEN", "TOEKOMST"];
+let huidigNamen = [];
+let achtergrondImg = null;
+let podcastCanvas = null;
 
 // API key
 const keyInput = document.getElementById('api-key');
@@ -118,68 +128,52 @@ keyInput.addEventListener('input', () => {
   try { localStorage.setItem('tarot_api_key', keyInput.value.trim()); } catch(e) {}
 });
 
-// Bestand kiezen
+// Foto kiezen
 document.getElementById('foto-input').addEventListener('change', function() {
+  if (this.files && this.files[0]) verwerkAfbeelding(this.files[0]);
+});
+
+// Achtergrond kiezen
+document.getElementById('bg-input').addEventListener('change', function() {
   if (this.files && this.files[0]) {
-    verwerkAfbeelding(this.files[0]);
+    laadAfbeelding(this.files[0]).then(img => {
+      achtergrondImg = img;
+      document.querySelector('.bg-upload strong').textContent = '✅ ' + this.files[0].name;
+    });
   }
 });
 
-function setStatus(t, kleur) {
-  const el = document.getElementById('status');
-  el.textContent = t;
-  el.style.color = kleur || '#888';
-}
-
-function setProgress(p) {
-  const prog = document.getElementById('prog');
-  prog.style.display = p > 0 && p < 100 ? 'block' : 'none';
-  document.getElementById('pb').style.width = p + '%';
-}
+function setStatus(t, k) { const el = document.getElementById('status'); el.textContent = t; el.style.color = k || '#888'; }
+function setProgress(p) { const prog = document.getElementById('prog'); prog.style.display = p > 0 && p < 100 ? 'block' : 'none'; document.getElementById('pb').style.width = p + '%'; }
 
 async function verwerkAfbeelding(file) {
   setStatus('Afbeelding laden...', '#888');
   document.getElementById('kaarten-grid').innerHTML = '';
   document.getElementById('deel-alles').style.display = 'none';
+  document.getElementById('podcast-panel').style.display = 'none';
   uitvoerCanvas = [];
-  huidigNamen = ["VERLEDEN", "HEDEN", "TOEKOMST"];
+  huidigNamen = [];
 
-  let img;
-  try {
-    img = await laadAfbeelding(file);
-  } catch(e) {
-    setStatus('❌ Kon afbeelding niet laden: ' + e.message, '#e74c3c');
-    return;
-  }
-
+  const img = await laadAfbeelding(file);
   const W = img.width, H = img.height;
 
-  // Detecteer formaat op breedte
   let formatKey;
-  if (file.name.includes('Tarot_Legging_Kaarten')) {
-    formatKey = 'Tarot_Legging_Kaarten';
-  } else if (W < 1500) {
-    formatKey = 'enkel';    // ~1100px breed = 1 kaart
-  } else if (W < 2500) {
-    formatKey = 'dubbel';   // ~2020px breed = 2 kaarten
-  } else {
-    formatKey = 'Tarot_Legging_Kaarten'; // ~2940px breed = 3 kaarten
-  }
+  if (file.name.includes('Tarot_Legging_Kaarten')) formatKey = 'Tarot_Legging_Kaarten';
+  else if (W < 1500) formatKey = 'enkel';
+  else if (W < 2500) formatKey = 'dubbel';
+  else formatKey = 'Tarot_Legging_Kaarten';
 
   const fmt = FORMATS[formatKey];
   const schaal = W / fmt.ref_breedte;
+  setStatus(`${W}×${H}px · ${fmt.kaarten.length} kaart(en) · schaal ${schaal.toFixed(2)}×`, '#c9a84c');
 
-  setStatus(`${W}×${H}px · ${formatKey} · schaal ${schaal.toFixed(2)}×`, '#c9a84c');
-
-  // Naamherkenning
   const apiKey = keyInput.value.trim();
   if (apiKey) {
     setStatus('🤖 Claude herkent namen...', '#9b59b6');
-    const namen = await detecteerNamen(file, apiKey);
+    const namen = await detecteerNamen(file, apiKey, fmt.kaarten.length);
     if (namen) huidigNamen = namen;
   }
 
-  // Losse kaarten uitsnijden
   setProgress(10);
   for (let i = 0; i < fmt.kaarten.length; i++) {
     const k = fmt.kaarten[i];
@@ -187,104 +181,182 @@ async function verwerkAfbeelding(file) {
     const y0 = Math.round(k.rect[1] * schaal);
     const x1 = Math.round(k.rect[2] * schaal);
     const y1 = Math.round(k.rect[3] * schaal);
-    const cw = x1 - x0, ch = y1 - y0;
 
     const src = document.createElement('canvas');
-    src.width = cw; src.height = ch;
-    src.getContext('2d').drawImage(img, x0, y0, cw, ch, 0, 0, cw, ch);
+    src.width = x1-x0; src.height = y1-y0;
+    src.getContext('2d').drawImage(img, x0, y0, x1-x0, y1-y0, 0, 0, src.width, src.height);
 
     const uit = document.createElement('canvas');
     uit.width = UIT_B; uit.height = UIT_H;
     const ctx = uit.getContext('2d');
-    ctx.fillStyle = '#000';
-    ctx.fillRect(0, 0, UIT_B, UIT_H);
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = 'high';
+    ctx.fillStyle = '#000'; ctx.fillRect(0, 0, UIT_B, UIT_H);
+    ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
     ctx.drawImage(src, 0, 0, UIT_B, UIT_H);
 
-    uitvoerCanvas.push({ canvas: uit, naam: huidigNamen[i] || k.naam });
-    setProgress(((i + 1) / 4) * 100);
-    toonKaart(uit, huidigNamen[i] || k.naam);
+    const naam = huidigNamen[i] || k.naam;
+    uitvoerCanvas.push({ canvas: uit, naam });
+    toonKaart(uit, naam);
+    setProgress(((i+1) / fmt.kaarten.length) * 80);
     await sleep(30);
   }
 
-  // Landschap versie uitsnijden (3 kaarten naast elkaar)
+  // Landschap versie
   if (fmt.landschap) {
     const l = fmt.landschap;
-    const lx0 = Math.round(l.rect[0] * schaal);
-    const ly0 = Math.round(l.rect[1] * schaal);
-    const lx1 = Math.round(l.rect[2] * schaal);
-    const ly1 = Math.round(l.rect[3] * schaal);
-    const lw = lx1 - lx0, lh = ly1 - ly0;
-
-    // Samsung Frame landschap: 3840×2160
+    const lx0 = Math.round(l.rect[0]*schaal), ly0 = Math.round(l.rect[1]*schaal);
+    const lx1 = Math.round(l.rect[2]*schaal), ly1 = Math.round(l.rect[3]*schaal);
     const land = document.createElement('canvas');
     land.width = 3840; land.height = 2160;
     const lctx = land.getContext('2d');
-    lctx.fillStyle = '#000';
-    lctx.fillRect(0, 0, 3840, 2160);
-    lctx.imageSmoothingEnabled = true;
-    lctx.imageSmoothingQuality = 'high';
-    lctx.drawImage(img, lx0, ly0, lw, lh, 0, 0, 3840, 2160);
-
+    lctx.fillStyle = '#000'; lctx.fillRect(0, 0, 3840, 2160);
+    lctx.imageSmoothingEnabled = true; lctx.imageSmoothingQuality = 'high';
+    lctx.drawImage(img, lx0, ly0, lx1-lx0, ly1-ly0, 0, 0, 3840, 2160);
     uitvoerCanvas.push({ canvas: land, naam: l.naam });
-    setProgress(100);
     toonKaart(land, l.naam, true);
   }
 
   setProgress(100);
   setStatus('✅ Klaar!', '#27ae60');
   document.getElementById('deel-alles').style.display = 'block';
+
+  // Toon podcast panel alleen bij 3 kaarten
+  if (fmt.kaarten.length === 3) {
+    document.getElementById('podcast-panel').style.display = 'block';
+  }
 }
 
 function toonKaart(canvas, naam, isLandschap = false) {
   const item = document.createElement('div');
   item.className = 'kaart-item';
-
-  const tw = Math.min(window.innerWidth - 32, 500);
-  const th = isLandschap
-    ? Math.round(tw * 2160 / 3840)
-    : Math.round(tw * UIT_H / UIT_B);
+  const tw = isLandschap ? Math.min(window.innerWidth - 32, 400) : Math.floor((window.innerWidth - 32 - 16) / 3);
+  const th = isLandschap ? Math.round(tw * 2160/3840) : Math.round(tw * UIT_H/UIT_B);
   const thumb = document.createElement('canvas');
   thumb.width = tw; thumb.height = th;
-  thumb.style.width = '100%';
   thumb.getContext('2d').drawImage(canvas, 0, 0, tw, th);
   item.appendChild(thumb);
-
   const footer = document.createElement('div');
   footer.className = 'kaart-footer';
-
   const naamEl = document.createElement('div');
   naamEl.className = 'kaart-naam';
-  naamEl.textContent = isLandschap ? '🖼️ ' + naam + ' (landschap)' : naam;
+  naamEl.textContent = isLandschap ? '🖼️ ' + naam : naam;
   footer.appendChild(naamEl);
-
   const knop = document.createElement('button');
-  knop.className = 'deel-knop';
-  knop.textContent = '📤 Deel';
+  knop.className = 'deel-knop'; knop.textContent = '📤';
   knop.addEventListener('click', () => deelKaart(canvas, naam));
   footer.appendChild(knop);
-
   item.appendChild(footer);
   document.getElementById('kaarten-grid').appendChild(item);
 }
 
-async function deelKaart(canvas, naam) {
+// Podcast Art genereren
+document.getElementById('maak-podcast-btn').addEventListener('click', async () => {
+  const kaartCanvassen = uitvoerCanvas.filter(c => !c.naam.includes('Landschap'));
+  if (kaartCanvassen.length === 0) { alert('Snijd eerst kaarten uit'); return; }
+
+  const titel = document.getElementById('podcast-titel').value.trim() || 'Naam episode';
+  const SIZE = 3000;
+
+  podcastCanvas = document.createElement('canvas');
+  podcastCanvas.width = SIZE; podcastCanvas.height = SIZE;
+  const ctx = podcastCanvas.getContext('2d');
+
+  // Achtergrond
+  if (achtergrondImg) {
+    ctx.drawImage(achtergrondImg, 0, 0, SIZE, SIZE);
+  } else {
+    // Fallback: paars verloop
+    const grad = ctx.createLinearGradient(0, 0, SIZE, SIZE);
+    grad.addColorStop(0, '#1a0a2e');
+    grad.addColorStop(0.5, '#3d1266');
+    grad.addColorStop(1, '#0d0622');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, SIZE, SIZE);
+  }
+
+  // Lichte overlay voor leesbaarheid
+  ctx.fillStyle = 'rgba(0,0,0,0.15)';
+  ctx.fillRect(0, 0, SIZE, SIZE);
+
+  // Kaarten plaatsen
+  const aantalKaarten = Math.min(kaartCanvassen.length, 3);
+  const marge = 80;
+  const gap = 40;
+  const kaartB = Math.floor((SIZE - 2*marge - (aantalKaarten-1)*gap) / aantalKaarten);
+  const kaartH = Math.round(kaartB * UIT_H / UIT_B);
+  const kaartY = Math.round((SIZE - kaartH) / 2) + 80; // iets lager voor titel
+
+  for (let i = 0; i < aantalKaarten; i++) {
+    const kx = marge + i * (kaartB + gap);
+
+    // Schaduw
+    ctx.shadowColor = 'rgba(0,0,0,0.7)';
+    ctx.shadowBlur = 30;
+    ctx.shadowOffsetX = 8;
+    ctx.shadowOffsetY = 8;
+
+    // Kaart
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(kaartCanvassen[i].canvas, kx, kaartY, kaartB, kaartH);
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 0;
+
+    // Gouden rand om kaart
+    ctx.strokeStyle = '#c9a84c';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(kx, kaartY, kaartB, kaartH);
+  }
+
+  // Titel bovenaan
+  const titelY = kaartY - 60;
+  const fontSize = Math.round(SIZE * 0.065);
+  ctx.font = `bold ${fontSize}px Georgia, serif`;
+  ctx.textAlign = 'center';
+
+  // Gouden gloed achter tekst
+  ctx.shadowColor = 'rgba(0,0,0,0.9)';
+  ctx.shadowBlur = 20;
+  ctx.fillStyle = '#c9a84c';
+  ctx.fillText(titel, SIZE/2, titelY);
+
+  // Tweede laag voor gloed effect
+  ctx.shadowColor = '#c9a84c';
+  ctx.shadowBlur = 15;
+  ctx.fillStyle = '#f0d080';
+  ctx.fillText(titel, SIZE/2, titelY);
+  ctx.shadowBlur = 0;
+  ctx.shadowColor = 'transparent';
+
+  // Toon preview
+  const prev = document.getElementById('podcast-preview');
+  const pw = window.innerWidth - 32;
+  prev.width = pw; prev.height = pw;
+  prev.style.display = 'block';
+  prev.getContext('2d').drawImage(podcastCanvas, 0, 0, pw, pw);
+
+  document.getElementById('deel-podcast-btn').style.display = 'block';
+  setStatus('🎙️ Podcast Art klaar!', '#9b59b6');
+});
+
+// Podcast Art delen
+document.getElementById('deel-podcast-btn').addEventListener('click', async () => {
+  if (!podcastCanvas) return;
+  const titel = document.getElementById('podcast-titel').value.trim() || 'podcast_art';
   try {
-    const blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 1.0));
-    const file = new File([blob], naam + '.jpg', { type: 'image/jpeg' });    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      await navigator.share({ files: [file], title: naam });
+    const blob = await new Promise(r => podcastCanvas.toBlob(r, 'image/png'));
+    const file = new File([blob], titel.replace(/\s+/g,'_') + '.png', { type: 'image/png' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ files: [file], title: titel });
     } else {
       const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = naam + '.jpg';
-      a.click();
+      a.href = URL.createObjectURL(blob); a.download = file.name; a.click();
     }
-  } catch(e) {
-    if (e.name !== 'AbortError') alert('Fout: ' + e.message);
-  }
-}
+  } catch(e) { if (e.name !== 'AbortError') alert('Fout: ' + e.message); }
+});
 
+// Deel alles
 document.getElementById('deel-alles').addEventListener('click', async () => {
   const files = [];
   for (const { canvas, naam } of uitvoerCanvas) {
@@ -297,18 +369,14 @@ document.getElementById('deel-alles').addEventListener('click', async () => {
     } else {
       for (const f of files) {
         const a = document.createElement('a');
-        a.href = URL.createObjectURL(f);
-        a.download = f.name;
-        a.click();
+        a.href = URL.createObjectURL(f); a.download = f.name; a.click();
         await sleep(300);
       }
     }
-  } catch(e) {
-    if (e.name !== 'AbortError') alert('Fout: ' + e.message);
-  }
+  } catch(e) { if (e.name !== 'AbortError') alert('Fout: ' + e.message); }
 });
 
-async function detecteerNamen(file, apiKey) {
+async function detecteerNamen(file, apiKey, aantal) {
   try {
     const b64 = await bestandNaarBase64(file);
     const resp = await fetch('https://api.anthropic.com/v1/messages', {
@@ -320,25 +388,21 @@ async function detecteerNamen(file, apiKey) {
         'anthropic-dangerous-direct-browser-access': 'true'
       },
       body: JSON.stringify({
-        model: 'claude-opus-4-5',
-        max_tokens: 100,
-        messages: [{
-          role: 'user',
-          content: [
-            { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: b64 }},
-            { type: 'text', text: 'Dit is een tarotlegging met 3 kaarten naast elkaar. Elke kaart heeft een naam onderaan. Geef ALLEEN de 3 namen terug van links naar rechts. Één naam per regel, geen nummers, geen extra tekst.' }
-          ]
-        }]
+        model: 'claude-opus-4-5', max_tokens: 100,
+        messages: [{ role: 'user', content: [
+          { type: 'image', source: { type: 'base64', media_type: file.type || 'image/jpeg', data: b64 }},
+          { type: 'text', text: `Dit is een tarotlegging met ${aantal} kaart${aantal > 1 ? 'en naast elkaar' : ''}. Elke kaart heeft een naam onderaan. Geef ALLEEN de ${aantal} naam${aantal > 1 ? 'en terug van links naar rechts' : ' terug'}. Één naam per regel, geen nummers, geen extra tekst.` }
+        ]}]
       })
     });
     if (!resp.ok) throw new Error(await resp.text());
     const data = await resp.json();
-    const namen = data.content[0].text.trim().split('\n').map(s => s.trim()).filter(Boolean).slice(0, 3);
-    while (namen.length < 3) namen.push('');
-    setStatus('Namen: ' + namen.join(', '), '#27ae60');
+    const namen = data.content[0].text.trim().split('\n').map(s => s.trim()).filter(Boolean).slice(0, aantal);
+    while (namen.length < aantal) namen.push('');
+    setStatus(`Namen: ${namen.join(', ')}`, '#27ae60');
     return namen;
   } catch(e) {
-    setStatus('Naamherkenning mislukt, doorgaan...', '#e74c3c');
+    setStatus('Naamherkenning mislukt', '#e74c3c');
     return null;
   }
 }
@@ -363,6 +427,19 @@ function bestandNaarBase64(file) {
 }
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+async function deelKaart(canvas, naam) {
+  try {
+    const blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 1.0));
+    const file = new File([blob], naam + '.jpg', { type: 'image/jpeg' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ files: [file], title: naam });
+    } else {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob); a.download = naam + '.jpg'; a.click();
+    }
+  } catch(e) { if (e.name !== 'AbortError') alert('Fout: ' + e.message); }
+}
 </script>
 </body>
 </html>
