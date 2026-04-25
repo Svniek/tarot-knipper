@@ -219,8 +219,8 @@ async function verwerkAfbeelding(file) {
   setStatus('✅ Klaar!', '#27ae60');
   document.getElementById('deel-alles').style.display = 'block';
 
-  // Toon podcast panel alleen bij 3 kaarten
-  if (fmt.kaarten.length === 3) {
+  // Toon podcast panel bij 1, 2 of 3 kaarten
+  if (fmt.kaarten.length >= 1) {
     document.getElementById('podcast-panel').style.display = 'block';
   }
 }
@@ -309,8 +309,9 @@ document.getElementById('maak-podcast-btn').addEventListener('click', async () =
     ctx.strokeRect(kx, kaartY, kaartB, kaartH);
   }
 
-  // Titel bovenaan
-  const titelY = kaartY - 60;
+  // Titel verticaal gecentreerd in de ruimte boven de kaarten
+  const ruimteBoven = kaartY; // pixels boven de kaarten
+  const titelY = Math.round(ruimteBoven / 2) + Math.round(fontSize / 2);
   const fontSize = Math.round(SIZE * 0.065);
   ctx.font = `bold ${fontSize}px Georgia, serif`;
   ctx.textAlign = 'center';
